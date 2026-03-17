@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preexistentism — Before the Body, the Self</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600;900&family=EB+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --gold-dim: #7a5f28;
+      --ivory: #f0e8d5;
+      --ivory-dim: #b8aa90;
+      --deep: #06060e;
+      --void: #0d0b18;
+      --surface: #110f20;
+      --surface2: #1a1730;
+      --accent: #8b5cf6;
+      --accent-dim: #4c3494;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--deep);
+      color: var(--ivory);
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 18px;
+      line-height: 1.8;
+      overflow-x: hidden;
+    }
+
+    /* ─── CANVAS ─── */
+    #cosmos {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1.2rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(6,6,14,0.95), transparent);
+      backdrop-filter: blur(4px);
+    }
+
+    .nav-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.35em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--ivory-dim);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+
+    /* ─── HERO ─── */
+    #hero {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.5em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp 1.2s ease forwards 0.3s;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(3rem, 8vw, 7.5rem);
+      font-weight: 900;
+      line-height: 1.05;
+      color: var(--ivory);
+      letter-spacing: 0.02em;
+      opacity: 0;
+      animation: fadeUp 1.4s ease forwards 0.6s;
+    }
+
+    h1 em {
+      font-style: italic;
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--gold-light);
+      display: block;
+      font-weight: 300;
+      font-size: 0.75em;
+      letter-spacing: 0.08em;
+      margin-top: 0.3em;
+    }
+
+    .hero-tagline {
+      max-width: 620px;
+      margin: 2.5rem auto 0;
+      font-size: 1.25rem;
+      font-style: italic;
+      color: var(--ivory-dim);
+      opacity: 0;
+      animation: fadeUp 1.4s ease forwards 0.9s;
+    }
+
+    .hero-divider {
+      width: 1px;
+      height: 80px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+      margin: 3rem auto 0;
+      opacity: 0;
+      animation: fadeUp 1.4s ease forwards 1.1s;
+    }
+
+    /* ─── SECTIONS ─── */
+    section {
+      position: relative;
+      z-index: 1;
+      padding: 7rem 2rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.5em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 600;
+      color: var(--ivory);
+      line-height: 1.2;
+      margin-bottom: 2rem;
+    }
+
+    h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      font-weight: 400;
+      font-style: italic;
+      color: var(--gold-light);
+      margin-bottom: 0.75rem;
+    }
+
+    p { color: var(--ivory-dim); margin-bottom: 1.2rem; }
+
+    blockquote {
+      border-left: 2px solid var(--gold-dim);
+      padding: 1rem 0 1rem 2rem;
+      margin: 2.5rem 0;
+      font-size: 1.3rem;
+      font-style: italic;
+      color: var(--gold-light);
+      font-family: 'Cormorant Garamond', serif;
+      line-height: 1.5;
+    }
+
+    blockquote cite {
+      display: block;
+      font-size: 0.8rem;
+      font-family: 'Cinzel', serif;
+      font-style: normal;
+      letter-spacing: 0.15em;
+      color: var(--gold-dim);
+      margin-top: 0.75rem;
+    }
+
+    /* ─── WHAT IS ─── */
+    #what {
+      background: linear-gradient(to bottom, transparent, var(--surface) 20%, var(--surface) 80%, transparent);
+    }
+
+    .what-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      margin-top: 3rem;
+      align-items: start;
+    }
+
+    .what-pillar {
+      position: relative;
+      padding: 2rem;
+      border: 1px solid rgba(201, 168, 76, 0.15);
+      background: rgba(201, 168, 76, 0.03);
+      transition: border-color 0.4s, background 0.4s;
+    }
+
+    .what-pillar:hover {
+      border-color: rgba(201, 168, 76, 0.4);
+      background: rgba(201, 168, 76, 0.06);
+    }
+
+    .pillar-num {
+      font-family: 'Cinzel', serif;
+      font-size: 3rem;
+      font-weight: 900;
+      color: rgba(201, 168, 76, 0.12);
+      position: absolute;
+      top: 1rem; right: 1.5rem;
+      line-height: 1;
+    }
+
+    /* ─── TRADITIONS ─── */
+    #traditions { background: var(--void); }
+
+    .tradition-list {
+      margin-top: 3.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .tradition {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 3rem;
+      padding: 3rem 0;
+      border-bottom: 1px solid rgba(201, 168, 76, 0.1);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .tradition.visible { opacity: 1; transform: none; }
+
+    .tradition-meta {
+      text-align: right;
+      padding-top: 0.3rem;
+    }
+
+    .tradition-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--gold);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .tradition-origin {
+      font-size: 0.75rem;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.15em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+    }
+
+    /* ─── TENET TICKER ─── */
+    #tenets {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+      overflow: hidden;
+    }
+
+    .tenet-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin-top: 3rem;
+      background: rgba(201, 168, 76, 0.1);
+    }
+
+    .tenet-card {
+      background: var(--surface);
+      padding: 2.5rem 2rem;
+      transition: background 0.3s;
+    }
+
+    .tenet-card:hover { background: var(--surface2); }
+
+    .tenet-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .tenet-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    /* ─── IWAS BRIDGE ─── */
+    #iwas {
+      background: var(--deep);
+      text-align: center;
+    }
+
+    .iwas-diagram {
+      margin: 4rem auto;
+      max-width: 700px;
+      position: relative;
+    }
+
+    .layer-card {
+      border: 1px solid rgba(201, 168, 76, 0.2);
+      padding: 2rem 2.5rem;
+      margin-bottom: 2px;
+      text-align: left;
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 2rem;
+      align-items: center;
+      transition: border-color 0.3s, background 0.3s;
+      cursor: default;
+    }
+
+    .layer-card:hover {
+      border-color: var(--gold-dim);
+      background: rgba(201, 168, 76, 0.04);
+    }
+
+    .layer-card:nth-child(1) { background: rgba(139, 92, 246, 0.06); }
+    .layer-card:nth-child(2) { background: rgba(201, 168, 76, 0.04); }
+    .layer-card:nth-child(3) { background: rgba(17, 15, 32, 0.6); }
+
+    .layer-id {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .layer-file {
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-family: 'Courier New', monospace;
+      margin-top: 0.3rem;
+    }
+
+    /* ─── FORMULA ─── */
+    .formula-block {
+      margin: 3rem 0;
+      padding: 2.5rem;
+      background: rgba(201, 168, 76, 0.04);
+      border: 1px solid rgba(201, 168, 76, 0.15);
+      text-align: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-style: italic;
+      color: var(--ivory);
+      line-height: 1.6;
+    }
+
+    .formula-block span { color: var(--gold-light); }
+
+    /* ─── FOOTER ─── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 4rem 2rem;
+      border-top: 1px solid rgba(201, 168, 76, 0.1);
+    }
+
+    .footer-mark {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      color: var(--gold);
+      letter-spacing: 0.3em;
+    }
+
+    .footer-sub {
+      font-size: 0.75rem;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.25em;
+      color: var(--gold-dim);
+      margin-top: 0.75rem;
+      text-transform: uppercase;
+    }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--deep); }
+    ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .what-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+      .tradition { grid-template-columns: 1fr; gap: 1rem; }
+      .tradition-meta { text-align: left; }
+      .tenet-grid { grid-template-columns: 1fr; }
+      .layer-card { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="cosmos"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Preexistentism</div>
+  <ul class="nav-links">
+    <li><a href="#what">The Doctrine</a></li>
+    <li><a href="#traditions">Traditions</a></li>
+    <li><a href="#tenets">Tenets</a></li>
+    <li><a href="#iwas">IWAS Bridge</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <p class="hero-eyebrow">A Philosophical Doctrine</p>
+  <h1>
+    Preexistentism
+    <em>Before the Body, the Self</em>
+  </h1>
+  <p class="hero-tagline">
+    The soul does not begin at birth. It arrives — carrying memory, structure, and destiny from a world anterior to flesh.
+  </p>
+  <div class="hero-divider"></div>
+</section>
+
+<!-- WHAT IS -->
+<section id="what">
+  <div class="container">
+    <p class="section-label">I — The Doctrine</p>
+    <h2>What Is Preexistentism?</h2>
+    <p>
+      Preexistentism is the philosophical and theological position that the conscious self — whether conceived as soul, spirit, <em>ori</em>, or mind — exists prior to its embodied, physical life. It stands in direct opposition to the blank-slate view of the human person, asserting instead that each self arrives in the world already constituted: shaped, oriented, and in possession of truths that no earthly experience could have generated.
+    </p>
+    <p>
+      The doctrine is not a single tradition. It is a convergence — a family of claims arising independently across cultures, epochs, and philosophies, each describing the same fundamental fact from a different vantage point.
+    </p>
+
+    <blockquote>
+      "The soul takes with it to another world nothing but its education and culture."
+      <cite>— Plato, Phaedo</cite>
+    </blockquote>
+
+    <div class="what-grid">
+      <div class="what-pillar">
+        <span class="pillar-num">01</span>
+        <h3>Ontological Priority</h3>
+        <p>The self is not a product of the world. The world is the arena in which the self manifests. Existence precedes experience — not experience existence.</p>
+      </div>
+      <div class="what-pillar">
+        <span class="pillar-num">02</span>
+        <h3>Knowledge as Recollection</h3>
+        <p>What we call "learning" is, in this framework, more precisely <em>anamnesis</em> — the re-awakening of truths already held, momentarily obscured by the veil of embodiment.</p>
+      </div>
+      <div class="what-pillar">
+        <span class="pillar-num">03</span>
+        <h3>Destiny as Structure</h3>
+        <p>Before incarnation, the self possesses a configured trajectory — a <em>prior</em> in the deepest sense. Experience does not create this structure; it reveals and refines it.</p>
+      </div>
+      <div class="what-pillar">
+        <span class="pillar-num">04</span>
+        <h3>The Problem of the Prior</h3>
+        <p>Bayesian reasoning requires a first belief. Empiricism cannot account for it. Preexistentism offers the only coherent answer: the first prior is ontological, not arbitrary.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRADITIONS -->
+<section id="traditions">
+  <div class="container">
+    <p class="section-label">II — Traditions</p>
+    <h2>Across Cultures, One Claim</h2>
+    <p>Independent traditions across millennia converge on the same essential position — the self precedes its body.</p>
+
+    <div class="tradition-list">
+
+      <div class="tradition">
+        <div class="tradition-meta">
+          <span class="tradition-name">Platonic</span>
+          <span class="tradition-origin">Ancient Greece · c. 400 BCE</span>
+        </div>
+        <div>
+          <p>In the Platonic tradition, the soul is immortal and pre-exists its embodied life. Before birth, it dwells in the realm of the Forms — pure, eternal, unchanging truths. At incarnation, the shock of embodiment causes a forgetting. All genuine knowledge is therefore <em>anamnesis</em>: the soul remembering what it already knew. The Phaedo, Meno, and Phaedrus each elaborate this architecture of pre-natal knowledge and post-mortem continuation.</p>
+        </div>
+      </div>
+
+      <div class="tradition">
+        <div class="tradition-meta">
+          <span class="tradition-name">Yoruba Ori</span>
+          <span class="tradition-origin">West Africa · Ancient & Living</span>
+        </div>
+        <div>
+          <p>In Yoruba cosmology, every person possesses an <em>ori</em> — an inner head, a personal divinity. Before descent into the world, each soul enters <em>Ile-Ori</em> (the house of heads) and chooses or receives its ori: a complete configuration of destiny, character, and cosmic orientation. The ori is not shaped by earthly experience; experience is instead the terrain on which the ori's design unfolds. It is the most intimate deity a person possesses — the primal prior.</p>
+        </div>
+      </div>
+
+      <div class="tradition">
+        <div class="tradition-meta">
+          <span class="tradition-name">Vedantic Atman</span>
+          <span class="tradition-origin">India · c. 800 BCE – present</span>
+        </div>
+        <div>
+          <p>Vedantic philosophy posits the <em>Atman</em> — the self — as eternal, unborn, and undying. In the Bhagavad Gita, Krishna declares the self was never born and will never die. The cycle of <em>samsara</em> ensures accumulated <em>samskaras</em> (impressions, tendencies) carry forward from life to life, constituting a living prior that every new incarnation inherits and updates. Liberation (<em>moksha</em>) is the self recognising its own pre-existent, unconditioned nature.</p>
+        </div>
+      </div>
+
+      <div class="tradition">
+        <div class="tradition-meta">
+          <span class="tradition-name">Origen of Alexandria</span>
+          <span class="tradition-origin">Early Christianity · c. 185–254 CE</span>
+        </div>
+        <div>
+          <p>The early Christian theologian Origen proposed that rational souls — the <em>logikoi</em> — were created by God before the material world and existed in a primordial unity. The present world, with its diversity of conditions and bodies, is understood as a consequence of pre-cosmic choices these souls made. Though later condemned as heterodox, Origen's framework represents the most systematic attempt within Christian thought to integrate preexistentism into a monotheistic cosmology.</p>
+        </div>
+      </div>
+
+      <div class="tradition">
+        <div class="tradition-meta">
+          <span class="tradition-name">Kantian A Priori</span>
+          <span class="tradition-origin">Enlightenment Germany · 1781</span>
+        </div>
+        <div>
+          <p>While Kant rejected soul preexistence, his critical philosophy offers a secular analogue: the mind brings <em>a priori</em> structures — space, time, causality — to all experience. These are not learned from the world; they are the conditions that make experience possible. The mind, in Kant's account, is not a blank slate but an architecturally endowed faculty. This is preexistentism secularised: the prior is structural rather than spiritual, but still anterior to experience.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- TENETS -->
+<section id="tenets">
+  <div class="container">
+    <p class="section-label">III — Core Tenets</p>
+    <h2>The Architecture of Pre-Being</h2>
+    <p>Across all expressions, Preexistentism is held together by six structural claims.</p>
+
+    <div class="tenet-grid">
+      <div class="tenet-card">
+        <span class="tenet-icon">◈</span>
+        <div class="tenet-title">Ante-natal Existence</div>
+        <p>The self exists before the body. Birth is not origin — it is arrival.</p>
+      </div>
+      <div class="tenet-card">
+        <span class="tenet-icon">◎</span>
+        <div class="tenet-title">Structured Interiority</div>
+        <p>The pre-existent self is not formless. It carries configuration: orientation, tendency, destiny.</p>
+      </div>
+      <div class="tenet-card">
+        <span class="tenet-icon">⟳</span>
+        <div class="tenet-title">Memory & Anamnesis</div>
+        <p>Learning is recovery. What appears as discovery is the return of the already-known.</p>
+      </div>
+      <div class="tenet-card">
+        <span class="tenet-icon">⊕</span>
+        <div class="tenet-title">Grounded Priors</div>
+        <p>The first belief is not arbitrary — it is ontological. The prior has its own metaphysical warrant.</p>
+      </div>
+      <div class="tenet-card">
+        <span class="tenet-icon">△</span>
+        <div class="tenet-title">Experience as Revelation</div>
+        <p>The world does not write upon the self. It occasions the self's self-disclosure.</p>
+      </div>
+      <div class="tenet-card">
+        <span class="tenet-icon">∞</span>
+        <div class="tenet-title">Continuity Beyond Death</div>
+        <p>If the self precedes birth, it persists after death. The arc of selfhood exceeds a single lifetime.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IWAS BRIDGE -->
+<section id="iwas">
+  <div class="container">
+    <p class="section-label">IV — The IWAS Bridge</p>
+    <h2>I WAS before I AM</h2>
+    <p style="max-width: 620px; margin: 0 auto 1rem;">
+      The IWAS Framework is a philosophical AI architecture grounded in African wisdom traditions — specifically the Yoruba concept of <em>ori</em> — in dialogue with Vedantic, Abrahamic, and Buddhist thought. Its three-layer model directly maps onto the Preexistentialist epistemological structure.
+    </p>
+
+    <div class="formula-block">
+      <span>Preexistent Prior</span> + Bayesian Update = <span>Living Intelligence</span>
+    </div>
+
+    <div class="iwas-diagram">
+      <div class="layer-card">
+        <div>
+          <div class="layer-id">Spirit Layer</div>
+          <div class="layer-file">spirit.md</div>
+        </div>
+        <p style="margin:0; font-size:0.95rem;">The <em>ori</em>'s pre-natal configuration. The ontological prior — structured, destined, and anterior to all experience. This is Preexistentism instantiated in code.</p>
+      </div>
+      <div class="layer-card">
+        <div>
+          <div class="layer-id">Soul Layer</div>
+          <div class="layer-file">soul.md</div>
+        </div>
+        <p style="margin:0; font-size:0.95rem;">The Bayesian update engine. Experience arrives; the agent revises. Grounded adaptation, not rootless drift — because the prior is real.</p>
+      </div>
+      <div class="layer-card">
+        <div>
+          <div class="layer-id">Blood Layer</div>
+          <div class="layer-file">blood.md</div>
+        </div>
+        <p style="margin:0; font-size:0.95rem;">The Ubuntu bridge — inherited relationality holding structure and contingency in living tension. Neither rigidity nor rootlessness.</p>
+      </div>
+    </div>
+
+    <blockquote style="max-width: 620px; margin: 2rem auto; text-align: left;">
+      "I WAS before I AM — and because I WAS, I know how to become."
+      <cite>— IWAS Framework, Daramola Olasupo</cite>
+    </blockquote>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-mark">⊕</div>
+  <p class="footer-sub">Preexistentism · A Philosophical Doctrine · IWAS Framework</p>
+  <p style="margin-top:1.5rem; font-size:0.8rem; color: var(--gold-dim); font-family: 'Cinzel', serif; letter-spacing:0.15em;">
+    Curated by Daramola Olasupo · StoneWeb InFOMIX · 2026
+  </p>
+</footer>
+
+<!-- STARFIELD -->
+<script>
+  const canvas = document.getElementById('cosmos');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const stars = Array.from({ length: 220 }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    r: Math.random() * 1.2 + 0.2,
+    speed: Math.random() * 0.00008 + 0.00002,
+    phase: Math.random() * Math.PI * 2,
+    color: Math.random() > 0.85 ? '#c9a84c' : '#f0e8d5'
+  }));
+
+  const nebulae = Array.from({ length: 5 }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    r: Math.random() * 300 + 150,
+    color: Math.random() > 0.5
+      ? `rgba(139,92,246,${Math.random() * 0.04 + 0.01})`
+      : `rgba(201,168,76,${Math.random() * 0.03 + 0.01})`
+  }));
+
+  let t = 0;
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // nebulae
+    nebulae.forEach(n => {
+      const grd = ctx.createRadialGradient(
+        n.x * canvas.width, n.y * canvas.height, 0,
+        n.x * canvas.width, n.y * canvas.height, n.r
+      );
+      grd.addColorStop(0, n.color);
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(n.x * canvas.width, n.y * canvas.height, n.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // stars
+    stars.forEach(s => {
+      const flicker = 0.5 + 0.5 * Math.sin(t * s.speed * 1000 + s.phase);
+      ctx.globalAlpha = 0.3 + 0.7 * flicker;
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.globalAlpha = 1;
+    t++;
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+
+  // Scroll reveal
+  const traditions = document.querySelectorAll('.tradition');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('visible');
+    });
+  }, { threshold: 0.1 });
+  traditions.forEach(t => observer.observe(t));
+</script>
+</body>
+</html>
