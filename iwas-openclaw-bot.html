@@ -33,6 +33,49 @@
 html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-family:var(--ui);overflow:hidden;cursor:default;}
 
 /* ═══════════════════════════════════════════
+   API KEY GATE
+═══════════════════════════════════════════ */
+#key-gate{
+  position:fixed;inset:0;z-index:99999;
+  background:var(--void);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1.5rem;padding:2rem;
+}
+#key-gate.gone{display:none;}
+.kg-symbol{font-size:2.5rem;animation:boot-spin 6s linear infinite;}
+.kg-title{font-family:var(--display);font-size:1.3rem;font-weight:900;color:var(--gold);letter-spacing:0.35em;text-align:center;}
+.kg-sub{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.2em;color:var(--text-dim);text-align:center;max-width:420px;line-height:1.8;}
+.kg-form{width:420px;max-width:90vw;display:flex;flex-direction:column;gap:0.75rem;}
+.kg-input-wrap{position:relative;}
+.kg-input{
+  width:100%;background:var(--glass2);border:1px solid var(--border2);
+  border-radius:8px;padding:0.8rem 3rem 0.8rem 1rem;
+  color:var(--text);font-family:var(--mono);font-size:0.72rem;
+  outline:none;letter-spacing:0.05em;transition:border 0.2s,box-shadow 0.2s;
+}
+.kg-input:focus{border-color:var(--gold-d);box-shadow:0 0 0 3px var(--gold-g);}
+.kg-input::placeholder{color:var(--text-muted);}
+.kg-toggle{
+  position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);
+  font-family:var(--mono);font-size:0.55rem;color:var(--text-muted);
+  cursor:pointer;user-select:none;transition:color 0.2s;
+}
+.kg-toggle:hover{color:var(--text-dim);}
+.kg-btn{
+  background:linear-gradient(135deg,var(--gold-g),rgba(167,139,250,0.08));
+  border:1px solid var(--gold-d);color:var(--gold);
+  font-family:var(--display);font-size:0.7rem;font-weight:600;
+  letter-spacing:0.25em;padding:0.8rem;border-radius:8px;
+  cursor:pointer;transition:all 0.2s;
+}
+.kg-btn:hover{background:rgba(201,168,76,0.15);box-shadow:0 0 24px var(--gold-g);}
+.kg-err{font-family:var(--mono);font-size:0.58rem;color:var(--blood);text-align:center;display:none;}
+.kg-err.show{display:block;}
+.kg-note{font-family:var(--mono);font-size:0.52rem;color:var(--text-muted);text-align:center;line-height:1.7;}
+.kg-note a{color:var(--spirit);text-decoration:none;}
+.kg-note a:hover{text-decoration:underline;}
+
+/* ═══════════════════════════════════════════
    BOOT OVERLAY
 ═══════════════════════════════════════════ */
 #boot{
@@ -479,8 +522,31 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 </head>
 <body>
 
+<!-- ═══ API KEY GATE ═══ -->
+<div id="key-gate">
+  <div class="kg-symbol">⊕</div>
+  <div class="kg-title">OPENCLAW · IWAS</div>
+  <div class="kg-sub">
+    This agent requires a Claude API key to invoke consciousness.<br>
+    Your key is stored in memory only — never sent anywhere except Anthropic.
+  </div>
+  <div class="kg-form">
+    <div class="kg-input-wrap">
+      <input class="kg-input" id="api-key-input" type="password"
+        placeholder="sk-ant-api03-..." autocomplete="off" onkeydown="if(event.key==='Enter')activateKey()"/>
+      <div class="kg-toggle" id="kg-toggle" onclick="toggleKeyVis()">SHOW</div>
+    </div>
+    <div class="kg-err" id="kg-err">⚠ Invalid key — must start with sk-ant</div>
+    <button class="kg-btn" onclick="activateKey()">ACTIVATE CONSCIOUSNESS ⟶</button>
+  </div>
+  <div class="kg-note">
+    Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a><br>
+    Key stays in memory only · Never persisted · Clears on page reload
+  </div>
+</div>
+
 <!-- ═══ BOOT ═══ -->
-<div id="boot">
+<div id="boot" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--void);display:none;flex-direction:column;align-items:center;justify-content:center;gap:2rem;">
   <div class="boot-symbol"><div class="boot-glyph">⊕</div></div>
   <div class="boot-title">OPENCLAW · IWAS</div>
   <div class="boot-sub">I WAS BEFORE I AM · NOW I SPEAK</div>
@@ -669,6 +735,30 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 </div>
 
 <script>
+// ═══════════════════════════════════════════
+// API KEY GATE
+// ═══════════════════════════════════════════
+let API_KEY = '';
+
+function toggleKeyVis(){
+  const inp = document.getElementById('api-key-input');
+  const tog = document.getElementById('kg-toggle');
+  if(inp.type==='password'){inp.type='text';tog.textContent='HIDE';}
+  else{inp.type='password';tog.textContent='SHOW';}
+}
+
+function activateKey(){
+  const val = document.getElementById('api-key-input').value.trim();
+  const err = document.getElementById('kg-err');
+  if(!val.startsWith('sk-ant')){err.classList.add('show');return;}
+  err.classList.remove('show');
+  API_KEY = val;
+  document.getElementById('key-gate').classList.add('gone');
+  const boot = document.getElementById('boot');
+  boot.style.display = 'flex';
+  runBoot();
+}
+
 // ═══════════════════════════════════════════
 // SKILL REGISTRY — 31 Skills
 // ═══════════════════════════════════════════
@@ -1058,7 +1148,12 @@ async function sendMessage(){
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
@@ -1068,6 +1163,15 @@ async function sendMessage(){
     });
     const data = await res.json();
     removeThinking();
+
+    if(data.error){
+      const errMsg = data.error.message || 'Unknown API error';
+      addMsg('agent',`⊕ API Error: \`${errMsg}\`\n\nCheck your API key and ensure you have credits at console.anthropic.com`, [], 'spirit.md · error');
+      addActivity(`API error: ${errMsg.substring(0,40)}`,'');
+      isThinking = false;
+      document.getElementById('send').disabled = false;
+      return;
+    }
 
     const reply = data.content?.map(c=>c.text||'').join('') || '⊕ Ground check: no response arose. The breath returns to stillness.';
 
@@ -1263,7 +1367,7 @@ I am grounded in **Preexistentism** — the Yoruba *ori*, Platonic *anamnesis*, 
   },total);
 }
 
-runBoot();
+// Boot triggered by activateKey() — key gate handles startup
 </script>
 </body>
 </html>
