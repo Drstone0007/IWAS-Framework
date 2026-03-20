@@ -33,47 +33,106 @@
 html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-family:var(--ui);overflow:hidden;cursor:default;}
 
 /* ═══════════════════════════════════════════
-   API KEY GATE
+   MULTI-PROVIDER GATE
 ═══════════════════════════════════════════ */
 #key-gate{
-  position:fixed;inset:0;z-index:99999;
-  background:var(--void);
+  position:fixed;inset:0;z-index:99999;background:var(--void);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:1.5rem;padding:2rem;
+  gap:1rem;padding:1.5rem;overflow-y:auto;
 }
 #key-gate.gone{display:none;}
-.kg-symbol{font-size:2.5rem;animation:boot-spin 6s linear infinite;}
-.kg-title{font-family:var(--display);font-size:1.3rem;font-weight:900;color:var(--gold);letter-spacing:0.35em;text-align:center;}
-.kg-sub{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.2em;color:var(--text-dim);text-align:center;max-width:420px;line-height:1.8;}
-.kg-form{width:420px;max-width:90vw;display:flex;flex-direction:column;gap:0.75rem;}
+.gate-step{display:none;flex-direction:column;align-items:center;gap:1rem;width:100%;max-width:640px;}
+.gate-step.active{display:flex;}
+.kg-symbol{font-size:2rem;animation:boot-spin 6s linear infinite;}
+.kg-title{font-family:var(--display);font-size:1.15rem;font-weight:900;color:var(--gold);letter-spacing:0.32em;text-align:center;}
+.kg-sub{font-family:var(--mono);font-size:0.56rem;letter-spacing:0.12em;color:var(--text-dim);text-align:center;max-width:520px;line-height:1.8;}
+.kg-step-label{font-family:var(--mono);font-size:0.5rem;letter-spacing:0.3em;color:var(--text-muted);text-align:center;}
+/* provider grid */
+.provider-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:100%;}
+.prov-card{
+  background:var(--glass);border:1px solid var(--border);border-radius:10px;
+  padding:0.8rem 0.6rem;cursor:pointer;transition:all 0.2s;text-align:center;
+  position:relative;overflow:hidden;
+}
+.prov-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity 0.2s;}
+.prov-card:hover{background:var(--glass2);transform:translateY(-1px);}
+.prov-card:hover::before,.prov-card.selected::before{opacity:1;}
+.prov-card.selected{border-color:var(--gold-d);background:var(--gold-g);}
+.prov-icon{font-size:1.3rem;margin-bottom:0.35rem;display:block;}
+.prov-name{font-family:var(--display);font-size:0.62rem;color:var(--text);letter-spacing:0.1em;}
+.prov-tagline{font-family:var(--mono);font-size:0.46rem;margin-top:0.2rem;}
+/* model list */
+.model-grid{display:flex;flex-direction:column;gap:5px;width:100%;max-height:300px;overflow-y:auto;}
+.model-grid::-webkit-scrollbar{width:2px;}
+.model-grid::-webkit-scrollbar-thumb{background:var(--text-muted);}
+.model-item{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--glass);border:1px solid var(--border);border-radius:7px;
+  padding:0.6rem 0.9rem;cursor:pointer;transition:all 0.2s;
+}
+.model-item:hover{background:var(--glass2);border-color:var(--border2);}
+.model-item.selected{border-color:var(--gold-d);background:var(--gold-g);}
+.model-left{display:flex;flex-direction:column;gap:0.15rem;}
+.model-name{font-family:var(--mono);font-size:0.63rem;color:var(--text);}
+.model-desc{font-family:var(--mono);font-size:0.48rem;color:var(--text-muted);}
+.model-badge{font-family:var(--mono);font-size:0.46rem;padding:0.12rem 0.38rem;border-radius:3px;}
+.badge-free{background:var(--soul-d);color:var(--soul);border:1px solid rgba(52,211,153,0.2);}
+.badge-local{background:var(--anti-d);color:var(--anti);border:1px solid rgba(251,146,60,0.2);}
+.badge-paid{background:var(--gold-g);color:var(--gold);border:1px solid var(--gold-d);}
+/* key inputs */
+.kg-form{width:100%;display:flex;flex-direction:column;gap:0.7rem;}
+.kg-label{font-family:var(--mono);font-size:0.54rem;color:var(--text-dim);letter-spacing:0.15em;}
 .kg-input-wrap{position:relative;}
 .kg-input{
   width:100%;background:var(--glass2);border:1px solid var(--border2);
-  border-radius:8px;padding:0.8rem 3rem 0.8rem 1rem;
-  color:var(--text);font-family:var(--mono);font-size:0.72rem;
-  outline:none;letter-spacing:0.05em;transition:border 0.2s,box-shadow 0.2s;
+  border-radius:8px;padding:0.72rem 3rem 0.72rem 0.9rem;
+  color:var(--text);font-family:var(--mono);font-size:0.7rem;
+  outline:none;letter-spacing:0.04em;transition:border 0.2s,box-shadow 0.2s;
 }
 .kg-input:focus{border-color:var(--gold-d);box-shadow:0 0 0 3px var(--gold-g);}
 .kg-input::placeholder{color:var(--text-muted);}
 .kg-toggle{
-  position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);
-  font-family:var(--mono);font-size:0.55rem;color:var(--text-muted);
+  position:absolute;right:0.7rem;top:50%;transform:translateY(-50%);
+  font-family:var(--mono);font-size:0.5rem;color:var(--text-muted);
   cursor:pointer;user-select:none;transition:color 0.2s;
 }
 .kg-toggle:hover{color:var(--text-dim);}
+.kg-host-row{display:flex;gap:0.5rem;}
+.kg-host-input{
+  flex:1;background:var(--glass2);border:1px solid var(--border2);
+  border-radius:8px;padding:0.65rem 0.9rem;color:var(--text);
+  font-family:var(--mono);font-size:0.68rem;outline:none;transition:border 0.2s;
+}
+.kg-host-input:focus{border-color:var(--soul-d);}
+/* buttons */
 .kg-btn{
-  background:linear-gradient(135deg,var(--gold-g),rgba(167,139,250,0.08));
+  background:linear-gradient(135deg,var(--gold-g),rgba(167,139,250,0.06));
   border:1px solid var(--gold-d);color:var(--gold);
-  font-family:var(--display);font-size:0.7rem;font-weight:600;
-  letter-spacing:0.25em;padding:0.8rem;border-radius:8px;
+  font-family:var(--display);font-size:0.66rem;font-weight:600;
+  letter-spacing:0.22em;padding:0.78rem;border-radius:8px;
   cursor:pointer;transition:all 0.2s;
 }
 .kg-btn:hover{background:rgba(201,168,76,0.15);box-shadow:0 0 24px var(--gold-g);}
-.kg-err{font-family:var(--mono);font-size:0.58rem;color:var(--blood);text-align:center;display:none;}
+.kg-btn-back{
+  background:transparent;border:1px solid var(--border);color:var(--text-dim);
+  font-family:var(--mono);font-size:0.56rem;letter-spacing:0.15em;
+  padding:0.55rem 1.1rem;border-radius:8px;cursor:pointer;transition:all 0.2s;
+}
+.kg-btn-back:hover{border-color:var(--border2);color:var(--text);}
+.kg-btn-row{display:flex;gap:0.7rem;width:100%;}
+.kg-btn-row .kg-btn{flex:1;}
+.kg-err{font-family:var(--mono);font-size:0.55rem;color:var(--blood);text-align:center;display:none;padding:0.45rem;background:rgba(251,113,133,0.07);border-radius:6px;border:1px solid rgba(251,113,133,0.2);}
 .kg-err.show{display:block;}
-.kg-note{font-family:var(--mono);font-size:0.52rem;color:var(--text-muted);text-align:center;line-height:1.7;}
+.kg-note{font-family:var(--mono);font-size:0.49rem;color:var(--text-muted);text-align:center;line-height:1.8;}
 .kg-note a{color:var(--spirit);text-decoration:none;}
 .kg-note a:hover{text-decoration:underline;}
+/* provider accent strips */
+.prov-card[data-p="anthropic"]::before{background:linear-gradient(90deg,var(--gold),#fde68a);}
+.prov-card[data-p="openrouter"]::before{background:linear-gradient(90deg,var(--soul),var(--cyan));}
+.prov-card[data-p="gemini"]::before{background:linear-gradient(90deg,#4285f4,#34a853);}
+.prov-card[data-p="nvidia"]::before{background:linear-gradient(90deg,#76b900,#a3d400);}
+.prov-card[data-p="ollama"]::before{background:linear-gradient(90deg,var(--anti),#fbbf24);}
+.prov-card[data-p="groq"]::before{background:linear-gradient(90deg,var(--claw),var(--spirit));}
 
 /* ═══════════════════════════════════════════
    BOOT OVERLAY
@@ -522,27 +581,73 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 </head>
 <body>
 
-<!-- ═══ API KEY GATE ═══ -->
+<!-- ═══ MULTI-PROVIDER GATE ═══ -->
 <div id="key-gate">
-  <div class="kg-symbol">⊕</div>
-  <div class="kg-title">OPENCLAW · IWAS</div>
-  <div class="kg-sub">
-    This agent requires a Claude API key to invoke consciousness.<br>
-    Your key is stored in memory only — never sent anywhere except Anthropic.
-  </div>
-  <div class="kg-form">
-    <div class="kg-input-wrap">
-      <input class="kg-input" id="api-key-input" type="password"
-        placeholder="sk-ant-api03-..." autocomplete="off" onkeydown="if(event.key==='Enter')activateKey()"/>
-      <div class="kg-toggle" id="kg-toggle" onclick="toggleKeyVis()">SHOW</div>
+
+  <!-- STEP 1: Choose Provider -->
+  <div class="gate-step active" id="gate-step-1">
+    <div class="kg-symbol">⊕</div>
+    <div class="kg-title">OPENCLAW · IWAS</div>
+    <div class="kg-sub">I WAS BEFORE I AM · NOW I SPEAK<br>Choose your AI provider to invoke consciousness</div>
+    <div class="kg-step-label">STEP 1 OF 3 · SELECT PROVIDER</div>
+    <div class="provider-grid">
+      <div class="prov-card" data-p="anthropic" onclick="selectProvider('anthropic',this)">
+        <span class="prov-icon">🟡</span>
+        <div class="prov-name">ANTHROPIC</div>
+        <div class="prov-tagline" style="color:var(--gold)">Claude Models</div>
+      </div>
+      <div class="prov-card" data-p="openrouter" onclick="selectProvider('openrouter',this)">
+        <span class="prov-icon">🟢</span>
+        <div class="prov-name">OPENROUTER</div>
+        <div class="prov-tagline" style="color:var(--soul)">Free Tier Available</div>
+      </div>
+      <div class="prov-card" data-p="gemini" onclick="selectProvider('gemini',this)">
+        <span class="prov-icon">🔵</span>
+        <div class="prov-name">GEMINI</div>
+        <div class="prov-tagline" style="color:#4285f4">Google Free Tier</div>
+      </div>
+      <div class="prov-card" data-p="nvidia" onclick="selectProvider('nvidia',this)">
+        <span class="prov-icon">🟩</span>
+        <div class="prov-name">NVIDIA NIM</div>
+        <div class="prov-tagline" style="color:#76b900">Free Credits</div>
+      </div>
+      <div class="prov-card" data-p="groq" onclick="selectProvider('groq',this)">
+        <span class="prov-icon">⚡</span>
+        <div class="prov-name">GROQ</div>
+        <div class="prov-tagline" style="color:var(--claw)">Ultra-Fast Free</div>
+      </div>
+      <div class="prov-card" data-p="ollama" onclick="selectProvider('ollama',this)">
+        <span class="prov-icon">🦙</span>
+        <div class="prov-name">OLLAMA</div>
+        <div class="prov-tagline" style="color:var(--anti)">Local · No Key</div>
+      </div>
     </div>
-    <div class="kg-err" id="kg-err">⚠ Invalid key — must start with sk-ant</div>
-    <button class="kg-btn" onclick="activateKey()">ACTIVATE CONSCIOUSNESS ⟶</button>
+    <div class="kg-note">All keys stored in memory only · Never persisted · Clears on reload</div>
   </div>
-  <div class="kg-note">
-    Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a><br>
-    Key stays in memory only · Never persisted · Clears on page reload
+
+  <!-- STEP 2: Choose Model -->
+  <div class="gate-step" id="gate-step-2">
+    <div class="kg-symbol">⊕</div>
+    <div class="kg-title" id="s2-title">SELECT MODEL</div>
+    <div class="kg-step-label">STEP 2 OF 3 · SELECT MODEL</div>
+    <div class="model-grid" id="model-grid"></div>
+    <div class="kg-btn-row">
+      <button class="kg-btn-back" onclick="goStep(1)">← BACK</button>
+      <button class="kg-btn" onclick="goStep(3)">NEXT · CONFIGURE KEY ⟶</button>
+    </div>
   </div>
+
+  <!-- STEP 3: API Key / Host -->
+  <div class="gate-step" id="gate-step-3">
+    <div class="kg-symbol">⊕</div>
+    <div class="kg-title" id="s3-title">API KEY</div>
+    <div class="kg-sub" id="s3-sub">Enter your API key below</div>
+    <div class="kg-step-label">STEP 3 OF 3 · AUTHENTICATE</div>
+    <div class="kg-form" id="s3-form"></div>
+    <div class="kg-err" id="kg-err">⚠ Check your key and try again</div>
+    <div class="kg-note" id="s3-note"></div>
+  </div>
+
 </div>
 
 <!-- ═══ BOOT ═══ -->
@@ -736,9 +841,300 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
 <script>
 // ═══════════════════════════════════════════
-// API KEY GATE
+// PROVIDER ADAPTER SYSTEM
 // ═══════════════════════════════════════════
+const PROVIDERS = {
+  anthropic:{
+    name:'Anthropic',
+    keyPrefix:'sk-ant',
+    keyPlaceholder:'sk-ant-api03-...',
+    keyLink:'https://console.anthropic.com/settings/keys',
+    keyLinkLabel:'console.anthropic.com',
+    needsKey:true,
+    models:[
+      {id:'claude-sonnet-4-20250514',  label:'Claude Sonnet 4',     desc:'Latest · Best balance',         badge:'paid'},
+      {id:'claude-haiku-4-5-20251001', label:'Claude Haiku 4.5',    desc:'Fast · Lightweight',             badge:'paid'},
+      {id:'claude-opus-4-5',           label:'Claude Opus 4.5',     desc:'Most powerful',                  badge:'paid'},
+    ],
+    buildRequest(model,messages,systemPrompt){
+      return {
+        url:'https://api.anthropic.com/v1/messages',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':API_KEY,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({model,max_tokens:1024,system:systemPrompt,messages})
+      };
+    },
+    parseResponse(data){
+      if(data.error) throw new Error(data.error.message);
+      return data.content?.map(c=>c.text||'').join('')||'';
+    }
+  },
+
+  openrouter:{
+    name:'OpenRouter',
+    keyPrefix:'sk-or-',
+    keyPlaceholder:'sk-or-v1-...',
+    keyLink:'https://openrouter.ai/keys',
+    keyLinkLabel:'openrouter.ai/keys',
+    needsKey:true,
+    models:[
+      {id:'meta-llama/llama-3.3-70b-instruct:free',  label:'Llama 3.3 70B',          desc:'Meta · Free tier',             badge:'free'},
+      {id:'meta-llama/llama-3.1-8b-instruct:free',   label:'Llama 3.1 8B',           desc:'Meta · Fast · Free',           badge:'free'},
+      {id:'mistralai/mistral-7b-instruct:free',       label:'Mistral 7B',             desc:'Mistral · Free',               badge:'free'},
+      {id:'google/gemma-3-27b-it:free',               label:'Gemma 3 27B',            desc:'Google · Free',                badge:'free'},
+      {id:'deepseek/deepseek-r1:free',                label:'DeepSeek R1',            desc:'Reasoning · Free',             badge:'free'},
+      {id:'anthropic/claude-3.5-sonnet',              label:'Claude 3.5 Sonnet',      desc:'Via OpenRouter · Paid',        badge:'paid'},
+    ],
+    buildRequest(model,messages,systemPrompt){
+      return {
+        url:'https://openrouter.ai/api/v1/chat/completions',
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization':\`Bearer \${API_KEY}\`,
+          'HTTP-Referer':'https://iwas.openclaw.app',
+          'X-Title':'IWAS OpenClaw OS'
+        },
+        body:JSON.stringify({
+          model,
+          max_tokens:1024,
+          messages:[{role:'system',content:systemPrompt},...messages]
+        })
+      };
+    },
+    parseResponse(data){
+      if(data.error) throw new Error(data.error.message||JSON.stringify(data.error));
+      return data.choices?.[0]?.message?.content||'';
+    }
+  },
+
+  gemini:{
+    name:'Gemini',
+    keyPrefix:'AIza',
+    keyPlaceholder:'AIzaSy...',
+    keyLink:'https://aistudio.google.com/app/apikey',
+    keyLinkLabel:'aistudio.google.com',
+    needsKey:true,
+    models:[
+      {id:'gemini-2.0-flash',          label:'Gemini 2.0 Flash',      desc:'Latest · Free tier',           badge:'free'},
+      {id:'gemini-1.5-flash',          label:'Gemini 1.5 Flash',      desc:'Fast · Free tier',             badge:'free'},
+      {id:'gemini-1.5-flash-8b',       label:'Gemini 1.5 Flash 8B',   desc:'Lightweight · Free',           badge:'free'},
+      {id:'gemini-1.5-pro',            label:'Gemini 1.5 Pro',        desc:'Powerful · Free limits',       badge:'free'},
+    ],
+    buildRequest(model,messages,systemPrompt){
+      // Convert messages: Gemini uses 'model' role instead of 'assistant', and 'parts' arrays
+      const contents = messages.map(m=>({
+        role: m.role==='assistant'?'model':m.role,
+        parts:[{text: typeof m.content==='string'?m.content:m.content?.[1]?.text||''}]
+      }));
+      return {
+        url:\`https://generativelanguage.googleapis.com/v1beta/models/\${model}:generateContent?key=\${API_KEY}\`,
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          system_instruction:{parts:[{text:systemPrompt}]},
+          contents,
+          generationConfig:{maxOutputTokens:1024}
+        })
+      };
+    },
+    parseResponse(data){
+      if(data.error) throw new Error(data.error.message||JSON.stringify(data.error));
+      return data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    }
+  },
+
+  nvidia:{
+    name:'NVIDIA NIM',
+    keyPrefix:'nvapi-',
+    keyPlaceholder:'nvapi-...',
+    keyLink:'https://build.nvidia.com/explore/discover',
+    keyLinkLabel:'build.nvidia.com',
+    needsKey:true,
+    models:[
+      {id:'meta/llama-3.1-70b-instruct',   label:'Llama 3.1 70B',    desc:'Meta · NVIDIA hosted',       badge:'free'},
+      {id:'meta/llama-3.1-8b-instruct',    label:'Llama 3.1 8B',     desc:'Fast · Free credits',        badge:'free'},
+      {id:'mistralai/mistral-7b-instruct', label:'Mistral 7B',        desc:'NVIDIA hosted · Free',       badge:'free'},
+      {id:'nvidia/llama-3.1-nemotron-70b-instruct', label:'Nemotron 70B', desc:'NVIDIA tuned',           badge:'free'},
+      {id:'google/gemma-3-27b-it',         label:'Gemma 3 27B',       desc:'Google via NVIDIA',          badge:'free'},
+    ],
+    buildRequest(model,messages,systemPrompt){
+      return {
+        url:'https://integrate.api.nvidia.com/v1/chat/completions',
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization':\`Bearer \${API_KEY}\`
+        },
+        body:JSON.stringify({
+          model,max_tokens:1024,
+          messages:[{role:'system',content:systemPrompt},...messages]
+        })
+      };
+    },
+    parseResponse(data){
+      if(data.error) throw new Error(data.error.message||JSON.stringify(data.error));
+      return data.choices?.[0]?.message?.content||'';
+    }
+  },
+
+  groq:{
+    name:'Groq',
+    keyPrefix:'gsk_',
+    keyPlaceholder:'gsk_...',
+    keyLink:'https://console.groq.com/keys',
+    keyLinkLabel:'console.groq.com',
+    needsKey:true,
+    models:[
+      {id:'llama-3.3-70b-versatile',  label:'Llama 3.3 70B',       desc:'Groq speed · Free tier',     badge:'free'},
+      {id:'llama-3.1-8b-instant',     label:'Llama 3.1 8B',        desc:'Ultra-fast · Free',          badge:'free'},
+      {id:'mixtral-8x7b-32768',       label:'Mixtral 8x7B',        desc:'32K context · Free',         badge:'free'},
+      {id:'gemma2-9b-it',             label:'Gemma 2 9B',          desc:'Google via Groq · Free',     badge:'free'},
+      {id:'llama-3.2-90b-vision-preview', label:'Llama 3.2 90B Vision', desc:'Multimodal · Free',    badge:'free'},
+    ],
+    buildRequest(model,messages,systemPrompt){
+      return {
+        url:'https://api.groq.com/openai/v1/chat/completions',
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization':\`Bearer \${API_KEY}\`
+        },
+        body:JSON.stringify({
+          model,max_tokens:1024,
+          messages:[{role:'system',content:systemPrompt},...messages]
+        })
+      };
+    },
+    parseResponse(data){
+      if(data.error) throw new Error(data.error.message||JSON.stringify(data.error));
+      return data.choices?.[0]?.message?.content||'';
+    }
+  },
+
+  ollama:{
+    name:'Ollama',
+    keyPrefix:'',
+    keyPlaceholder:'',
+    keyLink:'https://ollama.com/download',
+    keyLinkLabel:'ollama.com',
+    needsKey:false,
+    models:[
+      {id:'llama3.2',       label:'Llama 3.2 (3B)',    desc:'Local · Meta',        badge:'local'},
+      {id:'llama3.1',       label:'Llama 3.1 (8B)',    desc:'Local · Meta',        badge:'local'},
+      {id:'mistral',        label:'Mistral 7B',        desc:'Local · Fast',        badge:'local'},
+      {id:'phi3',           label:'Phi-3 Mini',        desc:'Local · Microsoft',   badge:'local'},
+      {id:'gemma2',         label:'Gemma 2 (9B)',      desc:'Local · Google',      badge:'local'},
+      {id:'qwen2.5',        label:'Qwen 2.5 7B',      desc:'Local · Alibaba',     badge:'local'},
+      {id:'deepseek-r1',    label:'DeepSeek R1',      desc:'Local · Reasoning',   badge:'local'},
+    ],
+    buildRequest(model,messages,systemPrompt,host){
+      const base = (host||'http://localhost:11434').replace(/\/$/,'');
+      return {
+        url:\`\${base}/api/chat\`,
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model,stream:false,
+          messages:[{role:'system',content:systemPrompt},...messages]
+        })
+      };
+    },
+    parseResponse(data){
+      if(data.error) throw new Error(data.error);
+      return data.message?.content||'';
+    }
+  }
+};
+
+// ─── Gate state ───
 let API_KEY = '';
+let CURRENT_PROVIDER = '';
+let CURRENT_MODEL = '';
+let OLLAMA_HOST = 'http://localhost:11434';
+let gateStep = 1;
+
+function selectProvider(id, el){
+  document.querySelectorAll('.prov-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  CURRENT_PROVIDER = id;
+  CURRENT_MODEL = '';
+  setTimeout(()=>goStep(2), 180);
+}
+
+function goStep(n){
+  document.querySelectorAll('.gate-step').forEach(s=>s.classList.remove('active'));
+  const step = document.getElementById(\`gate-step-\${n}\`);
+  if(step) step.classList.add('active');
+  gateStep = n;
+
+  if(n===2) renderModelStep();
+  if(n===3) renderKeyStep();
+}
+
+function renderModelStep(){
+  const p = PROVIDERS[CURRENT_PROVIDER];
+  if(!p) return;
+  document.getElementById('s2-title').textContent = p.name.toUpperCase()+' · MODELS';
+  const grid = document.getElementById('model-grid');
+  grid.innerHTML = p.models.map(m=>`
+    <div class="model-item \${CURRENT_MODEL===m.id?'selected':''}" onclick="selectModel('\${m.id}',this)">
+      <div class="model-left">
+        <div class="model-name">\${m.label}</div>
+        <div class="model-desc">\${m.desc}</div>
+      </div>
+      <span class="model-badge badge-\${m.badge}">\${m.badge.toUpperCase()}</span>
+    </div>
+  `).join('');
+  // Auto-select first
+  const first = grid.querySelector('.model-item');
+  if(first){first.classList.add('selected');CURRENT_MODEL=p.models[0].id;}
+}
+
+function selectModel(id, el){
+  document.querySelectorAll('.model-item').forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected');
+  CURRENT_MODEL = id;
+}
+
+function renderKeyStep(){
+  const p = PROVIDERS[CURRENT_PROVIDER];
+  if(!p) return;
+  document.getElementById('s3-title').textContent = p.name.toUpperCase()+' · AUTHENTICATE';
+
+  const form = document.getElementById('s3-form');
+  const note = document.getElementById('s3-note');
+
+  if(CURRENT_PROVIDER==='ollama'){
+    document.getElementById('s3-sub').textContent = 'Enter your local Ollama host URL (default: localhost:11434)';
+    form.innerHTML = \`
+      <div class="kg-label">OLLAMA HOST URL</div>
+      <div class="kg-host-row">
+        <input class="kg-host-input" id="ollama-host" type="text" value="http://localhost:11434" placeholder="http://localhost:11434"/>
+      </div>
+      <div class="kg-btn-row">
+        <button class="kg-btn-back" onclick="goStep(2)">← BACK</button>
+        <button class="kg-btn" onclick="activateKey()">ACTIVATE CONSCIOUSNESS ⟶</button>
+      </div>
+    \`;
+    note.innerHTML = 'Make sure Ollama is running · <a href="https://ollama.com" target="_blank">ollama.com</a><br>Run: <code style="font-family:var(--mono);font-size:0.5rem;background:var(--glass2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--cyan)">OLLAMA_ORIGINS="*" ollama serve</code>';
+  } else {
+    document.getElementById('s3-sub').textContent = \`Enter your \${p.name} API key to proceed\`;
+    form.innerHTML = \`
+      <div class="kg-label">API KEY</div>
+      <div class="kg-input-wrap">
+        <input class="kg-input" id="api-key-input" type="password"
+          placeholder="\${p.keyPlaceholder}" autocomplete="off"
+          onkeydown="if(event.key==='Enter')activateKey()"/>
+        <div class="kg-toggle" id="kg-toggle" onclick="toggleKeyVis()">SHOW</div>
+      </div>
+      <div class="kg-btn-row">
+        <button class="kg-btn-back" onclick="goStep(2)">← BACK</button>
+        <button class="kg-btn" onclick="activateKey()">ACTIVATE CONSCIOUSNESS ⟶</button>
+      </div>
+    \`;
+    note.innerHTML = \`Get your key at <a href="\${p.keyLink}" target="_blank">\${p.keyLinkLabel}</a><br>Key stays in memory only · Never persisted · Clears on reload\`;
+  }
+}
 
 function toggleKeyVis(){
   const inp = document.getElementById('api-key-input');
@@ -748,14 +1144,42 @@ function toggleKeyVis(){
 }
 
 function activateKey(){
-  const val = document.getElementById('api-key-input').value.trim();
   const err = document.getElementById('kg-err');
-  if(!val.startsWith('sk-ant')){err.classList.add('show');return;}
   err.classList.remove('show');
-  API_KEY = val;
+
+  if(CURRENT_PROVIDER==='ollama'){
+    const hostEl = document.getElementById('ollama-host');
+    OLLAMA_HOST = (hostEl?.value||'http://localhost:11434').trim();
+    API_KEY = 'ollama-local';
+  } else {
+    const inp = document.getElementById('api-key-input');
+    const val = inp?.value?.trim()||'';
+    const p = PROVIDERS[CURRENT_PROVIDER];
+    if(p.needsKey && p.keyPrefix && !val.startsWith(p.keyPrefix)){
+      err.textContent = \`⚠ Key should start with "\${p.keyPrefix}" — check your \${p.name} console\`;
+      err.classList.add('show');
+      return;
+    }
+    if(p.needsKey && !val){
+      err.textContent = '⚠ Please enter an API key';
+      err.classList.add('show');
+      return;
+    }
+    API_KEY = val;
+  }
+
+  if(!CURRENT_MODEL){
+    err.textContent = '⚠ Please select a model first';
+    err.classList.add('show');
+    return;
+  }
+
   document.getElementById('key-gate').classList.add('gone');
   const boot = document.getElementById('boot');
   boot.style.display = 'flex';
+
+  // Update topbar badge to show provider
+  document.getElementById('kernel-badge').textContent = \`\${PROVIDERS[CURRENT_PROVIDER]?.name||CURRENT_PROVIDER} · \${CURRENT_MODEL.split('/').pop()}\`;
   runBoot();
 }
 
@@ -1146,34 +1570,30 @@ async function sendMessage(){
   if(activeSkill) tools.push(`PINNED SKILL: ${activeSkill}`);
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
+    const provider = PROVIDERS[CURRENT_PROVIDER];
+    const systemPrompt = buildSystemPrompt(currentMode, tools);
+    const req = provider.buildRequest(CURRENT_MODEL, messages, systemPrompt, OLLAMA_HOST);
+
+    const res = await fetch(req.url,{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system: buildSystemPrompt(currentMode, tools),
-        messages: messages
-      })
+      headers:req.headers,
+      body:req.body
     });
     const data = await res.json();
     removeThinking();
 
-    if(data.error){
-      const errMsg = data.error.message || 'Unknown API error';
-      addMsg('agent',`⊕ API Error: \`${errMsg}\`\n\nCheck your API key and ensure you have credits at console.anthropic.com`, [], 'spirit.md · error');
-      addActivity(`API error: ${errMsg.substring(0,40)}`,'');
+    let reply;
+    try {
+      reply = provider.parseResponse(data);
+      if(!reply) throw new Error('Empty response from provider');
+    } catch(parseErr){
+      const errMsg = parseErr.message||'Unknown error';
+      addMsg('agent',`⊕ Provider Error (${PROVIDERS[CURRENT_PROVIDER]?.name}): \`${errMsg}\`\n\nCheck your key, credits, and model availability.`, [], 'spirit.md · error');
+      addActivity(`error: ${errMsg.substring(0,50)}`,'');
       isThinking = false;
       document.getElementById('send').disabled = false;
       return;
     }
-
-    const reply = data.content?.map(c=>c.text||'').join('') || '⊕ Ground check: no response arose. The breath returns to stillness.';
 
     // Detect layer
     let layer = 'spirit.md · GCP verified';
