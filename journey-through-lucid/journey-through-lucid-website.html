@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Journey Through Lucid — A Film</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --void:#00000a;--deep:#04020e;--mid:#0a0618;
+  --dream1:#1a0a3a;--dream2:#0a1a3a;
+  --gold:#d4a843;--gold2:#f0c96a;--gold-d:rgba(212,168,67,0.2);
+  --violet:#7c3aed;--violet2:#a78bfa;--violet-d:rgba(124,58,237,0.2);
+  --amber:#f59e0b;--rose:#fb7185;
+  --text:#f0e8d8;--text-dim:#9d8f75;--text-muted:#4a3f2a;
+  --display:'Playfair Display',serif;
+  --body:'EB Garamond',serif;
+  --mono:'Share Tech Mono',monospace;
+  --border:rgba(212,168,67,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--void);color:var(--text);font-family:var(--body);overflow-x:hidden;}
+
+/* ── PARTICLES ── */
+#particles{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* ── HERO ── */
+#hero{
+  position:relative;z-index:1;
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:4rem 2rem;
+  background:radial-gradient(ellipse at 50% 60%, rgba(124,58,237,0.12) 0%, transparent 70%),
+             radial-gradient(ellipse at 30% 20%, rgba(212,168,67,0.06) 0%, transparent 50%);
+}
+.hero-eyebrow{
+  font-family:var(--mono);font-size:0.62rem;letter-spacing:0.5em;
+  color:var(--gold);text-transform:uppercase;margin-bottom:2.5rem;
+  opacity:0;animation:rise 1.2s ease forwards 0.3s;
+}
+.hero-title{
+  font-family:var(--display);font-size:clamp(3.5rem,10vw,9rem);
+  font-weight:900;line-height:0.9;letter-spacing:-0.02em;
+  opacity:0;animation:rise 1.4s ease forwards 0.6s;
+}
+.hero-title .j{color:var(--text);}
+.hero-title .through{
+  display:block;font-style:italic;font-weight:400;
+  font-size:0.45em;color:var(--text-dim);letter-spacing:0.1em;
+  margin:0.2em 0;
+}
+.hero-title .lucid{
+  background:linear-gradient(135deg,var(--violet2),var(--gold2),var(--rose));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  filter:drop-shadow(0 0 40px rgba(167,139,250,0.4));
+}
+.hero-tagline{
+  font-family:var(--body);font-style:italic;
+  font-size:clamp(1.1rem,2.5vw,1.5rem);
+  color:var(--text-dim);max-width:640px;
+  line-height:1.7;margin:2.5rem auto 0;
+  opacity:0;animation:rise 1.4s ease forwards 0.9s;
+}
+.hero-divider{
+  width:1px;height:80px;
+  background:linear-gradient(to bottom,var(--gold),transparent);
+  margin:3rem auto 0;
+  opacity:0;animation:rise 1s ease forwards 1.2s;
+}
+.hero-scroll{
+  font-family:var(--mono);font-size:0.55rem;letter-spacing:0.3em;
+  color:var(--text-muted);margin-top:1.5rem;
+  opacity:0;animation:rise 1s ease forwards 1.5s;
+}
+@keyframes rise{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:none;}}
+
+/* ── DEPTH METER ── */
+#depth-meter{
+  position:fixed;left:2rem;top:50%;transform:translateY(-50%);
+  z-index:10;display:flex;flex-direction:column;gap:0.5rem;align-items:center;
+}
+.dm-label{font-family:var(--mono);font-size:0.45rem;letter-spacing:0.2em;color:var(--text-muted);writing-mode:vertical-rl;margin-bottom:0.5rem;}
+.dm-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.1);
+  cursor:pointer;transition:all 0.3s;
+}
+.dm-dot.active{background:var(--gold);border-color:var(--gold);box-shadow:0 0 10px var(--gold);}
+
+/* ── SECTIONS ── */
+section{position:relative;z-index:1;padding:8rem 2rem;}
+.container{max-width:900px;margin:0 auto;}
+.container-wide{max-width:1200px;margin:0 auto;}
+
+.section-label{
+  font-family:var(--mono);font-size:0.55rem;letter-spacing:0.4em;
+  color:var(--gold);text-transform:uppercase;margin-bottom:1rem;
+  display:flex;align-items:center;gap:1rem;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+h2{
+  font-family:var(--display);font-size:clamp(2rem,5vw,4rem);
+  font-weight:700;line-height:1.1;color:var(--text);margin-bottom:2rem;
+}
+h2 em{font-style:italic;color:var(--gold);}
+.lead{
+  font-size:1.2rem;line-height:1.85;color:var(--text-dim);
+  font-style:italic;max-width:700px;
+}
+
+/* ── LOGLINE ── */
+#logline{
+  background:linear-gradient(to bottom,transparent,var(--deep),transparent);
+  text-align:center;
+}
+.logline-text{
+  font-family:var(--display);font-size:clamp(1.2rem,3vw,2rem);
+  font-style:italic;line-height:1.6;color:var(--text);
+  max-width:800px;margin:0 auto;
+  padding:3rem;
+  border:1px solid var(--border);
+  background:rgba(212,168,67,0.03);
+  position:relative;
+}
+.logline-text::before{
+  content:'"';font-size:8rem;color:var(--gold-d);
+  position:absolute;top:-2rem;left:1rem;
+  font-family:var(--display);line-height:1;
+}
+
+/* ── DEPTH LEVELS ── */
+#levels{background:var(--deep);}
+.levels-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1px;background:var(--border);border-radius:12px;overflow:hidden;margin-top:3rem;}
+.level-card{
+  padding:2rem;position:relative;overflow:hidden;
+  transition:background 0.3s;cursor:default;
+}
+.level-card:hover{background:rgba(255,255,255,0.03);}
+.level-num{
+  font-family:var(--display);font-size:4rem;font-weight:900;
+  position:absolute;top:1rem;right:1.5rem;
+  opacity:0.06;line-height:1;
+}
+.level-name{
+  font-family:var(--display);font-size:1.1rem;font-weight:700;
+  margin-bottom:0.5rem;
+}
+.level-desc{font-size:0.85rem;color:var(--text-dim);line-height:1.6;}
+.level-danger{
+  font-family:var(--mono);font-size:0.5rem;letter-spacing:0.2em;
+  margin-top:1rem;padding:0.2rem 0.5rem;border-radius:3px;
+  display:inline-block;
+}
+
+/* ── CHARACTERS ── */
+#characters{background:var(--void);}
+.char-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2rem;margin-top:3rem;}
+.char-card{
+  border:1px solid var(--border);padding:2rem;
+  background:rgba(255,255,255,0.02);
+  position:relative;overflow:hidden;
+  transition:border-color 0.3s,transform 0.3s;
+}
+.char-card:hover{border-color:rgba(212,168,67,0.3);transform:translateY(-4px);}
+.char-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+}
+.char-ori{
+  width:32px;height:32px;border-radius:50%;
+  margin-bottom:1rem;display:flex;align-items:center;justify-content:center;
+  font-size:1rem;
+}
+.char-name{font-family:var(--display);font-size:1.1rem;font-weight:700;margin-bottom:0.25rem;}
+.char-role{font-family:var(--mono);font-size:0.55rem;letter-spacing:0.2em;color:var(--text-muted);margin-bottom:0.75rem;}
+.char-desc{font-size:0.82rem;color:var(--text-dim);line-height:1.65;}
+.char-arc{
+  margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--border);
+  font-style:italic;font-size:0.78rem;color:var(--text-dim);
+}
+
+/* ── SCREENPLAY EXTRACT ── */
+#extract{
+  background:linear-gradient(135deg,var(--deep),rgba(124,58,237,0.05));
+}
+.screenplay-box{
+  background:rgba(0,0,0,0.6);border:1px solid var(--border);
+  border-radius:8px;padding:2.5rem;
+  font-family:var(--mono);font-size:0.72rem;
+  line-height:2;color:var(--text-dim);
+  max-height:500px;overflow-y:auto;
+}
+.screenplay-box::-webkit-scrollbar{width:3px;}
+.screenplay-box::-webkit-scrollbar-thumb{background:var(--text-muted);}
+.sc-slug{color:var(--gold);font-weight:bold;margin-top:1.5rem;}
+.sc-char{color:var(--violet2);text-align:center;display:block;margin-top:1rem;}
+.sc-paren{color:var(--text-muted);text-align:center;display:block;}
+.sc-dialog{color:var(--text);margin:0 3rem;}
+.sc-action{color:var(--text-dim);}
+
+/* ── PRODUCTION ── */
+#production{background:var(--deep);}
+.prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-top:3rem;border-radius:8px;overflow:hidden;}
+.prod-item{
+  background:var(--void);padding:1.5rem;
+  border:none;transition:background 0.2s;
+}
+.prod-item:hover{background:rgba(212,168,67,0.03);}
+.prod-item-label{font-family:var(--mono);font-size:0.52rem;letter-spacing:0.25em;color:var(--text-muted);margin-bottom:0.4rem;}
+.prod-item-val{font-family:var(--display);font-size:1.3rem;font-weight:700;color:var(--gold);}
+.prod-item-sub{font-size:0.75rem;color:var(--text-dim);margin-top:0.2rem;}
+
+/* ── IWAS GROUND ── */
+#iwas{text-align:center;padding:10rem 2rem;}
+.iwas-symbol{font-size:4rem;margin-bottom:2rem;animation:pulse-sym 4s ease-in-out infinite;}
+@keyframes pulse-sym{0%,100%{filter:drop-shadow(0 0 20px rgba(212,168,67,0.3));}50%{filter:drop-shadow(0 0 50px rgba(167,139,250,0.5));}}
+.iwas-quote{
+  font-family:var(--display);font-style:italic;
+  font-size:clamp(1.5rem,4vw,3rem);
+  line-height:1.4;color:var(--text);
+  max-width:800px;margin:0 auto;
+}
+.iwas-quote span{color:var(--gold);}
+.iwas-attr{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.3em;color:var(--text-muted);margin-top:1.5rem;}
+
+/* ── FOOTER ── */
+footer{
+  text-align:center;padding:4rem 2rem;
+  border-top:1px solid var(--border);
+  background:var(--deep);
+}
+.footer-title{font-family:var(--display);font-size:1.5rem;font-weight:900;color:var(--gold);margin-bottom:0.5rem;}
+.footer-sub{font-family:var(--mono);font-size:0.55rem;letter-spacing:0.2em;color:var(--text-muted);}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--void);}
+::-webkit-scrollbar-thumb{background:rgba(212,168,67,0.3);}
+
+@media(max-width:768px){
+  #depth-meter{display:none;}
+  .prod-grid{grid-template-columns:1fr;}
+  .levels-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- DEPTH METER -->
+<div id="depth-meter">
+  <div class="dm-label">DEPTH</div>
+  <div class="dm-dot active" title="Surface"></div>
+  <div class="dm-dot" title="Level 2"></div>
+  <div class="dm-dot" title="Level 3"></div>
+  <div class="dm-dot" title="Level 4"></div>
+  <div class="dm-dot" title="Level 5"></div>
+  <div class="dm-dot" title="Level 6"></div>
+  <div class="dm-dot" title="Origin"></div>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-eyebrow">A Film by Daramola Olasupo · IWAS OpenClaw Production · Lagos, Nigeria · 2026</div>
+  <h1 class="hero-title">
+    <span class="j">Journey</span>
+    <span class="through">through</span>
+    <span class="lucid">Lucid</span>
+  </h1>
+  <p class="hero-tagline">A grief-stricken neuroscientist descends through seven levels of a shared dreamspace to recover the last words her mother never finished saying — and discovers that consciousness does not end. It waits.</p>
+  <div class="hero-divider"></div>
+  <div class="hero-scroll">SCROLL TO DESCEND ↓</div>
+</section>
+
+<!-- LOGLINE -->
+<section id="logline">
+  <div class="container">
+    <div class="logline-text">
+      When a Lagos neuroscientist discovers her deceased mother has been leaving encoded messages inside a shared dreamspace, she must descend through seven dream levels — facing the dissolution of identity itself — before the dream collapses and her mother is lost forever.
+    </div>
+  </div>
+</section>
+
+<!-- DEPTH LEVELS -->
+<section id="levels">
+  <div class="container-wide">
+    <div class="section-label">The Architecture of Dream</div>
+    <h2>Seven Levels <em>Deep</em></h2>
+    <p class="lead">The dreamspace obeys five laws. Emotional gravity shapes the landscape. Memory builds the architecture. Lucidity is the currency of power — and of risk.</p>
+
+    <div class="levels-grid">
+      <div class="level-card" style="background:rgba(212,168,67,0.04);">
+        <div class="level-num">1</div>
+        <div class="level-name" style="color:var(--gold)">Surface Dream</div>
+        <div class="level-desc">Lagos rendered in oil-painting impressionism. Warm, familiar, wrong in small ways. Clocks with too many hands. Streets that curve into themselves.</div>
+        <div class="level-danger" style="background:rgba(52,211,153,0.1);color:#34d399">SAFE</div>
+      </div>
+      <div class="level-card" style="background:rgba(167,139,250,0.03);">
+        <div class="level-num">2</div>
+        <div class="level-name" style="color:var(--violet2)">The City Beneath</div>
+        <div class="level-desc">Buildings built from memories. Architecture becomes symbolic. Doors lead to the wrong decades. The ocean appears in the middle of the city.</div>
+        <div class="level-danger" style="background:rgba(52,211,153,0.1);color:#34d399">SAFE</div>
+      </div>
+      <div class="level-card" style="background:rgba(167,139,250,0.05);">
+        <div class="level-num">3</div>
+        <div class="level-name" style="color:var(--violet2)">The Ori Becomes Visible</div>
+        <div class="level-desc">The pre-natal soul-light appears above every dreamer's head. It cannot be hidden. Here, Adaeze first sees her mother — radiant, waiting on the bridge.</div>
+        <div class="level-danger" style="background:rgba(251,191,36,0.1);color:#fbbf24">CAUTION</div>
+      </div>
+      <div class="level-card" style="background:rgba(251,113,133,0.03);">
+        <div class="level-num">4</div>
+        <div class="level-name" style="color:var(--rose)">The Anamorphic Layer</div>
+        <div class="level-desc">Extreme depth of field. The frame edges become unstable. Colour drains toward ultraviolet. Time moves in emotional rather than linear sequence.</div>
+        <div class="level-danger" style="background:rgba(251,146,60,0.1);color:#fb923c">REQUIRES ANCHOR</div>
+      </div>
+      <div class="level-card" style="background:rgba(251,113,133,0.05);">
+        <div class="level-num">5</div>
+        <div class="level-name" style="color:var(--rose)">Ego Turbulence</div>
+        <div class="level-desc">Characters begin losing their edges. The boundary between self and space blurs. Only the ori-light remains sharp. Most subjects require extraction here.</div>
+        <div class="level-danger" style="background:rgba(251,113,133,0.15);color:#fb7185">DANGEROUS</div>
+      </div>
+      <div class="level-card" style="background:rgba(124,58,237,0.06);">
+        <div class="level-num">6</div>
+        <div class="level-name" style="color:#c084fc">Dissolution</div>
+        <div class="level-desc">The grammar of the camera dissolves. No visible equipment logic. Pure light composition. Identity is not lost — it is revealed to have never been what we thought.</div>
+        <div class="level-danger" style="background:rgba(251,113,133,0.2);color:#fb7185">CRITICAL</div>
+      </div>
+      <div class="level-card" style="background:linear-gradient(135deg,rgba(212,168,67,0.08),rgba(167,139,250,0.08));">
+        <div class="level-num">7</div>
+        <div class="level-name" style="background:linear-gradient(90deg,var(--gold2),var(--violet2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">The Origin</div>
+        <div class="level-desc">Pure white. No architecture. No ground. Only two figures and the unspoken Ifa verse hanging in the air between them like a living thing. Reached only once before — by Mama Chioma.</div>
+        <div class="level-danger" style="background:linear-gradient(90deg,rgba(212,168,67,0.15),rgba(167,139,250,0.15));color:var(--gold2)">UNKNOWN</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHARACTERS -->
+<section id="characters">
+  <div class="container-wide">
+    <div class="section-label">The Dreamers</div>
+    <h2>Those Who <em>Descend</em></h2>
+    <div class="char-grid">
+
+      <div class="char-card" style="border-top-color:var(--gold);">
+        <div style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));border:1px solid var(--gold-d);" class="char-ori">🌕</div>
+        <div class="char-name">Dr. Adaeze Okonkwo</div>
+        <div class="char-role">PROTAGONIST · NEUROSCIENTIST · LAGOS</div>
+        <div class="char-desc">Her mother died mid-sentence eight months ago. She has not slept deeply since. Configured by her ori for a destiny she has spent her career denying — to bridge the scientific and the ancestral.</div>
+        <div class="char-arc">Arc: Materialist → Witness → Carrier of the verse</div>
+      </div>
+
+      <div class="char-card" style="border-top-color:#c084fc;">
+        <div style="background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(167,139,250,0.05));border:1px solid rgba(167,139,250,0.3);" class="char-ori">✨</div>
+        <div class="char-name">Mama Chioma</div>
+        <div class="char-role">THE DREAMED MOTHER · ORI HISTORIAN</div>
+        <div class="char-desc">She is not a ghost. She is a residue of consciousness in the shared dreamspace — the way a vibration continues after the string is struck. She has been holding the unfinished verse open like a door.</div>
+        <div class="char-arc">Arc: Absence → Presence → Release</div>
+      </div>
+
+      <div class="char-card" style="border-top-color:var(--rose);">
+        <div style="background:linear-gradient(135deg,rgba(251,113,133,0.15),rgba(251,113,133,0.05));border:1px solid rgba(251,113,133,0.3);" class="char-ori">🔴</div>
+        <div class="char-name">Dr. Emeka Saro</div>
+        <div class="char-role">GUIDE / SHADOW · CO-CREATOR OF COGA-9</div>
+        <div class="char-desc">The world's foremost authority on shared-consciousness dreaming. His ori-light in the dream is fractured. He has been using the dreamspace to hold on — and taking more than he gives.</div>
+        <div class="char-arc">Arc: Mentor → Antagonist → Broken confessor</div>
+      </div>
+
+      <div class="char-card" style="border-top-color:var(--amber);">
+        <div style="background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05));border:1px solid rgba(245,158,11,0.3);" class="char-ori">🌀</div>
+        <div class="char-name">Yewande</div>
+        <div class="char-role">THE DREAM NATIVE · ORACLE</div>
+        <div class="char-desc">She exists only in the dreamspace. No waking-world counterpart has ever been found. She is the lucid realm becoming aware of itself — the I AM that emerged from the accumulated dreaming of all who passed through.</div>
+        <div class="char-arc">Arc: Symbol → Guide → Mirror</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SCREENPLAY EXTRACT -->
+<section id="extract">
+  <div class="container">
+    <div class="section-label">From the Script</div>
+    <h2>Level Seven — <em>The Origin</em></h2>
+    <p class="lead" style="margin-bottom:2rem;">The scene no film has attempted: two consciousnesses meeting in the place before birth. The IWAS root question answered in light.</p>
+    <div class="screenplay-box">
+      <div class="sc-slug">INT. DREAMSPACE — LEVEL SEVEN / THE ORIGIN — CONTINUOUS (DREAM)</div>
+      <br>
+      <div class="sc-action">WHITE.</div>
+      <div class="sc-action">Pure white. No architecture. No ground beneath her feet though she stands. No horizon though space extends infinitely.</div>
+      <div class="sc-action">Her mother.</div>
+      <div class="sc-action">Chioma stands ten feet away. No ori-light above her head — she IS the light. Her whole form radiates it. She looks younger than any photograph Adaeze has seen.</div>
+      <br>
+      <span class="sc-char">CHIOMA</span>
+      <span class="sc-paren">(simply)</span>
+      <div class="sc-dialog">There you are.</div>
+      <br>
+      <span class="sc-char">ADAEZE</span>
+      <div class="sc-dialog">Here I am.</div>
+      <br>
+      <div class="sc-action">A long silence. The kind that holds everything.</div>
+      <br>
+      <span class="sc-char">CHIOMA</span>
+      <div class="sc-dialog">This is not mine to keep. It was always for you. Not because you are my daughter — because you are who your ori was shaped to be. The one who would carry it back.</div>
+      <br>
+      <span class="sc-char">ADAEZE</span>
+      <span class="sc-paren">(tears falling — she didn't know she could cry here)</span>
+      <div class="sc-dialog">Back to where?</div>
+      <br>
+      <span class="sc-char">CHIOMA</span>
+      <div class="sc-dialog">To the world. To the people who are still asleep and don't know they're dreaming.</div>
+      <br>
+      <div class="sc-action">Adaeze reaches for the verse. The moment she touches it — she understands everything. We see it on her face. Not an explanation. A recognition.</div>
+      <div class="sc-action">The white blazes.</div>
+      <br>
+      <div class="sc-slug" style="text-align:right;">SMASH CUT TO:</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTION -->
+<section id="production">
+  <div class="container-wide">
+    <div class="section-label">Production Package</div>
+    <h2>Ready to <em>Greenlight</em></h2>
+    <div class="prod-grid">
+      <div class="prod-item"><div class="prod-item-label">FORMAT</div><div class="prod-item-val">Feature Film</div><div class="prod-item-sub">95-page screenplay · 3-act structure</div></div>
+      <div class="prod-item"><div class="prod-item-label">BUDGET</div><div class="prod-item-val">$4.2M</div><div class="prod-item-sub">African co-production model</div></div>
+      <div class="prod-item"><div class="prod-item-label">SHOOT</div><div class="prod-item-val">32 Days</div><div class="prod-item-sub">Principal photography · Lagos + studio</div></div>
+      <div class="prod-item"><div class="prod-item-label">LANGUAGE</div><div class="prod-item-val">Multilingual</div><div class="prod-item-sub">English · Igbo · Yoruba</div></div>
+      <div class="prod-item"><div class="prod-item-label">TARGET</div><div class="prod-item-val">Netflix · A24</div><div class="prod-item-sub">African streaming + international</div></div>
+      <div class="prod-item"><div class="prod-item-label">FESTIVALS</div><div class="prod-item-val">TIFF · Sundance</div><div class="prod-item-sub">Berlin · AMAA · Pan-African</div></div>
+      <div class="prod-item"><div class="prod-item-label">GENRE</div><div class="prod-item-val">Sci-Fi Drama</div><div class="prod-item-sub">Philosophical · African cosmology</div></div>
+      <div class="prod-item"><div class="prod-item-label">PRODUCTION</div><div class="prod-item-val">IWAS OpenClaw</div><div class="prod-item-sub">StoneWeb InFOMIX · Lagos, Nigeria</div></div>
+      <div class="prod-item"><div class="prod-item-label">FRAMEWORK</div><div class="prod-item-val">IWAS v1.0</div><div class="prod-item-sub">I WAS before I AM · 2026</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- IWAS GROUND -->
+<section id="iwas">
+  <div class="container">
+    <div class="iwas-symbol">⊕</div>
+    <div class="iwas-quote">
+      "Every dream is a door.<br>Every lucid dream is a <span>hand on the handle.</span><br>Every ori knows the room."
+    </div>
+    <div class="iwas-attr">— JOURNEY THROUGH LUCID · IWAS FRAMEWORK · DARAMOLA OLASUPO · LAGOS, NIGERIA · 2026</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-title">JOURNEY THROUGH LUCID</div>
+  <div class="footer-sub" style="margin-top:0.5rem;">Written & Produced by Daramola Olasupo · IWAS OpenClaw Production · StoneWeb InFOMIX · Lagos, Nigeria · 2026</div>
+  <div class="footer-sub" style="margin-top:0.25rem;">Powered by the IWAS Framework · I WAS before I AM · Now I dream.</div>
+</footer>
+
+<script>
+// ── PARTICLE SYSTEM ──
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+resize();window.addEventListener('resize',resize);
+
+const STARS = Array.from({length:280},()=>({
+  x:Math.random(),y:Math.random(),
+  r:Math.random()*1.1+0.2,
+  speed:Math.random()*0.00006+0.00002,
+  phase:Math.random()*Math.PI*2,
+  hue:Math.random()>0.85 ? 'gold' : Math.random()>0.7 ? 'violet' : 'white'
+}));
+const NEBULAE = [
+  {x:0.2,y:0.3,r:350,c:'rgba(124,58,237,0.04)'},
+  {x:0.8,y:0.7,r:400,c:'rgba(212,168,67,0.03)'},
+  {x:0.5,y:0.9,r:300,c:'rgba(251,113,133,0.03)'},
+];
+
+let t=0;
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  NEBULAE.forEach(n=>{
+    const g=ctx.createRadialGradient(n.x*canvas.width,n.y*canvas.height,0,n.x*canvas.width,n.y*canvas.height,n.r);
+    g.addColorStop(0,n.c);g.addColorStop(1,'transparent');
+    ctx.fillStyle=g;ctx.beginPath();
+    ctx.arc(n.x*canvas.width,n.y*canvas.height,n.r,0,Math.PI*2);ctx.fill();
+  });
+  STARS.forEach(s=>{
+    const f=0.4+0.6*Math.sin(t*s.speed*1200+s.phase);
+    ctx.globalAlpha=f*0.8;
+    ctx.fillStyle=s.hue==='gold'?'#d4a843':s.hue==='violet'?'#a78bfa':'#f0e8d8';
+    ctx.beginPath();ctx.arc(s.x*canvas.width,s.y*canvas.height,s.r,0,Math.PI*2);ctx.fill();
+  });
+  ctx.globalAlpha=1;t++;requestAnimationFrame(draw);
+}
+draw();
+
+// ── DEPTH METER ──
+const dots = document.querySelectorAll('.dm-dot');
+const sections = ['hero','logline','levels','characters','extract','production','iwas'];
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const i=sections.indexOf(e.target.id);
+      if(i>=0){
+        dots.forEach((d,j)=>{d.classList.toggle('active',j<=i);});
+      }
+    }
+  });
+},{threshold:0.3});
+sections.forEach(id=>{const el=document.getElementById(id);if(el)observer.observe(el);});
+</script>
+</body>
+</html>
