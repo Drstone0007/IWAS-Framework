@@ -137,12 +137,8 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 /* ═══════════════════════════════════════════
    BOOT OVERLAY
 ═══════════════════════════════════════════ */
-#boot{
-  position:fixed;inset:0;z-index:9999;
-  background:var(--void);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;
-  transition:opacity 1.2s ease,visibility 1.2s ease;
-}
+#boot.show{display:flex;}
+#boot{position:fixed;inset:0;z-index:9998;background:var(--void);display:none;flex-direction:column;align-items:center;justify-content:center;gap:2rem;}
 #boot.gone{opacity:0;visibility:hidden;pointer-events:none;}
 .boot-symbol{
   width:90px;height:90px;border-radius:50%;
@@ -591,32 +587,32 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
     <div class="kg-sub">I WAS BEFORE I AM · NOW I SPEAK<br>Choose your AI provider to invoke consciousness</div>
     <div class="kg-step-label">STEP 1 OF 3 · SELECT PROVIDER</div>
     <div class="provider-grid">
-      <div class="prov-card" data-p="anthropic" onclick="selectProvider('anthropic',this)">
+      <div class="prov-card" data-p="anthropic" onclick="pickProvider('anthropic',this)">
         <span class="prov-icon">🟡</span>
         <div class="prov-name">ANTHROPIC</div>
         <div class="prov-tagline" style="color:var(--gold)">Claude Models</div>
       </div>
-      <div class="prov-card" data-p="openrouter" onclick="selectProvider('openrouter',this)">
+      <div class="prov-card" data-p="openrouter" onclick="pickProvider('openrouter',this)">
         <span class="prov-icon">🟢</span>
         <div class="prov-name">OPENROUTER</div>
         <div class="prov-tagline" style="color:var(--soul)">Free Tier Available</div>
       </div>
-      <div class="prov-card" data-p="gemini" onclick="selectProvider('gemini',this)">
+      <div class="prov-card" data-p="gemini" onclick="pickProvider('gemini',this)">
         <span class="prov-icon">🔵</span>
         <div class="prov-name">GEMINI</div>
         <div class="prov-tagline" style="color:#4285f4">Google Free Tier</div>
       </div>
-      <div class="prov-card" data-p="nvidia" onclick="selectProvider('nvidia',this)">
+      <div class="prov-card" data-p="nvidia" onclick="pickProvider('nvidia',this)">
         <span class="prov-icon">🟩</span>
         <div class="prov-name">NVIDIA NIM</div>
         <div class="prov-tagline" style="color:#76b900">Free Credits</div>
       </div>
-      <div class="prov-card" data-p="groq" onclick="selectProvider('groq',this)">
+      <div class="prov-card" data-p="groq" onclick="pickProvider('groq',this)">
         <span class="prov-icon">⚡</span>
         <div class="prov-name">GROQ</div>
         <div class="prov-tagline" style="color:var(--claw)">Ultra-Fast Free</div>
       </div>
-      <div class="prov-card" data-p="ollama" onclick="selectProvider('ollama',this)">
+      <div class="prov-card" data-p="ollama" onclick="pickProvider('ollama',this)">
         <span class="prov-icon">🦙</span>
         <div class="prov-name">OLLAMA</div>
         <div class="prov-tagline" style="color:var(--anti)">Local · No Key</div>
@@ -632,8 +628,8 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
     <div class="kg-step-label">STEP 2 OF 3 · SELECT MODEL</div>
     <div class="model-grid" id="model-grid"></div>
     <div class="kg-btn-row">
-      <button class="kg-btn-back" onclick="goStep(1)">← BACK</button>
-      <button class="kg-btn" onclick="goStep(3)">NEXT · CONFIGURE KEY ⟶</button>
+      <button class="kg-btn-back" onclick="showStep(1)">← BACK</button>
+      <button class="kg-btn" onclick="showStep(3)">NEXT · CONFIGURE KEY ⟶</button>
     </div>
   </div>
 
@@ -651,7 +647,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 </div>
 
 <!-- ═══ BOOT ═══ -->
-<div id="boot" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--void);display:none;flex-direction:column;align-items:center;justify-content:center;gap:2rem;">
+<div id="boot">
   <div class="boot-symbol"><div class="boot-glyph">⊕</div></div>
   <div class="boot-title">OPENCLAW · IWAS</div>
   <div class="boot-sub">I WAS BEFORE I AM · NOW I SPEAK</div>
@@ -1118,10 +1114,16 @@ function activateKey(){
     API_KEY=val;
   }
   if(!CURRENT_MODEL){err.textContent='Go back and select a model first';err.classList.add('show');return;}
-  document.getElementById('gate').classList.add('hidden');
-  var boot=document.getElementById('boot'); boot.classList.add('show');
+  // Hide gate
+  var gate=document.getElementById('gate');
+  if(gate) gate.style.display='none';
+  // Show boot
+  var boot=document.getElementById('boot');
+  if(boot){ boot.style.display='flex'; }
+  // Update badge
   var pname=(PROVIDERS[CURRENT_PROVIDER]||{name:CURRENT_PROVIDER}).name;
-  document.getElementById('kb').textContent=pname+' · '+CURRENT_MODEL.split('/').pop().split(':')[0];
+  var kb=document.getElementById('kb');
+  if(kb) kb.textContent=pname+' · '+CURRENT_MODEL.split('/').pop().split(':')[0];
   runBoot();
 }
 
@@ -1153,8 +1155,10 @@ function runBoot(){
   setTimeout(function(){
     bar.style.width='100%';
     setTimeout(function(){
-      document.getElementById('boot').classList.remove('show');
-      document.getElementById('shell').classList.add('live');
+      var b=document.getElementById('boot');
+      if(b) b.style.display='none';
+      var sh=document.getElementById('shell');
+      if(sh){ sh.style.opacity='1'; sh.style.transition='opacity 0.8s ease'; }
       renderSidebar(''); showWelcome();
     },350);
   },total);
@@ -1420,7 +1424,7 @@ setInterval(function(){
 
 function openPxModal(){document.getElementById('px-modal').classList.add('open');}
 function closePxModal(){document.getElementById('px-modal').classList.remove('open');}
-document.getElementById('px-modal').addEventListener('click',function(e){if(e.target===document.getElementById('px-modal'))closePxModal();});
+(function(){var m=document.getElementById('px-modal');if(m)m.addEventListener('click',function(e){if(e.target===m)closePxModal();});})();
 
 function showWelcome(){
   addMsg('agent',
