@@ -850,81 +850,592 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 </div>
 
 <script>
+'use strict';
 
-// ═══════════════════════════════════════════
-// CORS PROXY HELPER
-// ═══════════════════════════════════════════
-// When running from file:// browsers block direct API calls (CORS).
-// These provider URL rewriters route through a lightweight proxy when needed.
-const IS_FILE = location.protocol === 'file:';
-
-function proxyUrl(url) {
-  // Only proxy if running from file:// AND user has opted in
-  if (IS_FILE && window._useProxy) {
-    return 'https://corsproxy.io/?' + encodeURIComponent(url);
+var PROVIDERS = {
+  anthropic: {
+    name:'Anthropic', keyPrefix:'sk-ant', keyPlaceholder:'sk-ant-api03-...',
+    keyLink:'https://console.anthropic.com/settings/keys', keyLinkLabel:'console.anthropic.com',
+    needsKey:true,
+    models:[
+      {id:'claude-sonnet-4-20250514',  label:'Claude Sonnet 4',  desc:'Latest best balance', badge:'paid'},
+      {id:'claude-haiku-4-5-20251001', label:'Claude Haiku 4.5', desc:'Fast lightweight',     badge:'paid'},
+      {id:'claude-opus-4-6',           label:'Claude Opus 4.6',  desc:'Most powerful',        badge:'paid'},
+    ],
+    buildRequest: function(model, msgs, sys) {
+      return {
+        url: 'https://api.anthropic.com/v1/messages',
+        headers: {'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body: JSON.stringify({model:model,max_tokens:1024,system:sys,messages:msgs})
+      };
+    },
+    parseResponse: function(d) {
+      if(d.error) throw new Error(d.error.message||JSON.stringify(d.error));
+      return (d.content||[]).map(function(c){return c.text||'';}).join('');
+    }
+  },
+  openrouter: {
+    name:'OpenRouter', keyPrefix:'sk-or-', keyPlaceholder:'sk-or-v1-...',
+    keyLink:'https://openrouter.ai/keys', keyLinkLabel:'openrouter.ai/keys',
+    needsKey:true,
+    models:[
+      {id:'meta-llama/llama-3.3-70b-instruct:free',label:'Llama 3.3 70B',desc:'Meta Free',   badge:'free'},
+      {id:'meta-llama/llama-3.1-8b-instruct:free', label:'Llama 3.1 8B', desc:'Fast Free',   badge:'free'},
+      {id:'mistralai/mistral-7b-instruct:free',     label:'Mistral 7B',   desc:'Free',        badge:'free'},
+      {id:'deepseek/deepseek-r1:free',              label:'DeepSeek R1',  desc:'Reasoning',   badge:'free'},
+    ],
+    buildRequest: function(model, msgs, sys) {
+      return {
+        url:'https://openrouter.ai/api/v1/chat/completions',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+API_KEY,'HTTP-Referer':'https://iwas.openclaw.app','X-Title':'IWAS OpenClaw'},
+        body:JSON.stringify({model:model,max_tokens:1024,messages:[{role:'system',content:sys}].concat(msgs)})
+      };
+    },
+    parseResponse: function(d) {
+      if(d.error) throw new Error(JSON.stringify(d.error));
+      return ((d.choices||[])[0]||{}).message.content||'';
+    }
+  },
+  gemini: {
+    name:'Gemini', keyPrefix:'AIza', keyPlaceholder:'AIzaSy...',
+    keyLink:'https://aistudio.google.com/app/apikey', keyLinkLabel:'aistudio.google.com',
+    needsKey:true,
+    models:[
+      {id:'gemini-2.0-flash',  label:'Gemini 2.0 Flash', desc:'Latest Free', badge:'free'},
+      {id:'gemini-1.5-flash',  label:'Gemini 1.5 Flash', desc:'Fast Free',   badge:'free'},
+      {id:'gemini-1.5-pro',    label:'Gemini 1.5 Pro',   desc:'Powerful',    badge:'free'},
+    ],
+    buildRequest: function(model, msgs, sys) {
+      var contents = msgs.map(function(m){return {role:m.role==='assistant'?'model':m.role,parts:[{text:typeof m.content==='string'?m.content:String(m.content)}]};});
+      return {
+        url:'https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+API_KEY,
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({system_instruction:{parts:[{text:sys}]},contents:contents,generationConfig:{maxOutputTokens:1024}})
+      };
+    },
+    parseResponse: function(d) {
+      if(d.error) throw new Error(d.error.message||JSON.stringify(d.error));
+      return (((((d.candidates||[])[0]||{}).content||{}).parts||[])[0]||{}).text||'';
+    }
+  },
+  nvidia: {
+    name:'NVIDIA NIM', keyPrefix:'nvapi-', keyPlaceholder:'nvapi-...',
+    keyLink:'https://build.nvidia.com', keyLinkLabel:'build.nvidia.com',
+    needsKey:true,
+    models:[
+      {id:'meta/llama-3.1-70b-instruct', label:'Llama 3.1 70B', desc:'Free credits', badge:'free'},
+      {id:'meta/llama-3.1-8b-instruct',  label:'Llama 3.1 8B',  desc:'Fast free',    badge:'free'},
+    ],
+    buildRequest: function(model, msgs, sys) {
+      return {
+        url:'https://integrate.api.nvidia.com/v1/chat/completions',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+API_KEY},
+        body:JSON.stringify({model:model,max_tokens:1024,messages:[{role:'system',content:sys}].concat(msgs)})
+      };
+    },
+    parseResponse: function(d) {
+      if(d.error) throw new Error(JSON.stringify(d.error));
+      return ((d.choices||[])[0]||{}).message.content||'';
+    }
+  },
+  groq: {
+    name:'Groq', keyPrefix:'gsk_', keyPlaceholder:'gsk_...',
+    keyLink:'https://console.groq.com/keys', keyLinkLabel:'console.groq.com',
+    needsKey:true,
+    models:[
+      {id:'llama-3.3-70b-versatile',  label:'Llama 3.3 70B', desc:'Groq speed free', badge:'free'},
+      {id:'llama-3.1-8b-instant',     label:'Llama 3.1 8B',  desc:'Ultra fast free', badge:'free'},
+      {id:'mixtral-8x7b-32768',       label:'Mixtral 8x7B',  desc:'32K context',     badge:'free'},
+      {id:'gemma2-9b-it',             label:'Gemma 2 9B',    desc:'Google via Groq', badge:'free'},
+    ],
+    buildRequest: function(model, msgs, sys) {
+      return {
+        url:'https://api.groq.com/openai/v1/chat/completions',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+API_KEY},
+        body:JSON.stringify({model:model,max_tokens:1024,messages:[{role:'system',content:sys}].concat(msgs)})
+      };
+    },
+    parseResponse: function(d) {
+      if(d.error) throw new Error(d.error.message||JSON.stringify(d.error));
+      return ((d.choices||[])[0]||{}).message.content||'';
+    }
+  },
+  ollama: {
+    name:'Ollama', keyPrefix:'', keyPlaceholder:'',
+    keyLink:'https://ollama.com/download', keyLinkLabel:'ollama.com',
+    needsKey:false,
+    models:[
+      {id:'llama3.2', label:'Llama 3.2 3B', desc:'Local Meta',      badge:'local'},
+      {id:'llama3.1', label:'Llama 3.1 8B', desc:'Local Meta',      badge:'local'},
+      {id:'mistral',  label:'Mistral 7B',   desc:'Local fast',      badge:'local'},
+      {id:'gemma2',   label:'Gemma 2 9B',   desc:'Local Google',    badge:'local'},
+    ],
+    buildRequest: function(model, msgs, sys, host) {
+      var base=(host||'http://localhost:11434').replace(/\/$/,'');
+      return {
+        url:base+'/api/chat',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:model,stream:false,messages:[{role:'system',content:sys}].concat(msgs)})
+      };
+    },
+    parseResponse: function(d) {
+      if(d.error) throw new Error(d.error);
+      return (d.message||{}).content||'';
+    }
   }
-  return url;
+};
+
+var TIERS={claude:{label:'CLAUDE CORE',dot:'#67e8f9'},example:{label:'EXAMPLE',dot:'#34d399'},antigrav:{label:'ANTIGRAVITY',dot:'#fb923c'},openclaw:{label:'OPENCLAW',dot:'#e879f9'},iwas:{label:'IWAS CORE',dot:'#a78bfa'}};
+var SKILLS=[
+  {tier:'claude',name:'docx',desc:'Word documents APA formatting'},
+  {tier:'claude',name:'pdf',desc:'Create merge split extract OCR PDFs'},
+  {tier:'claude',name:'pptx',desc:'PowerPoint decks narrated slides'},
+  {tier:'claude',name:'xlsx',desc:'Spreadsheets formulas charts'},
+  {tier:'claude',name:'frontend-design',desc:'Production web interfaces glassmorphism'},
+  {tier:'claude',name:'product-self-knowledge',desc:'Verified Claude product knowledge'},
+  {tier:'example',name:'algorithmic-art',desc:'p5.js generative art flow fields'},
+  {tier:'example',name:'brand-guidelines',desc:'Brand color typography consistency'},
+  {tier:'example',name:'canvas-design',desc:'Visual art posters PNG PDF'},
+  {tier:'example',name:'doc-coauthoring',desc:'Documentation co-authoring workflow'},
+  {tier:'example',name:'internal-comms',desc:'Reports newsletters leadership updates'},
+  {tier:'example',name:'mcp-builder',desc:'MCP servers FastMCP TypeScript SDK'},
+  {tier:'example',name:'skill-creator',desc:'Create evaluate optimise skills'},
+  {tier:'example',name:'slack-gif-creator',desc:'Animated GIFs for Slack'},
+  {tier:'example',name:'theme-factory',desc:'10 preset themes custom generation'},
+  {tier:'example',name:'web-artifacts-builder',desc:'React Tailwind shadcn/ui apps'},
+  {tier:'antigrav',name:'deep-synthesis',desc:'Cross-tradition philosophical synthesis'},
+  {tier:'antigrav',name:'multi-modal-reason',desc:'Code philosophy math narrative'},
+  {tier:'antigrav',name:'temporal-weave',desc:'Historical present future emergence'},
+  {tier:'antigrav',name:'consciousness-cartography',desc:'Awareness topology mapping'},
+  {tier:'antigrav',name:'anti-gravity-writing',desc:'Philosophical thriller technical poetry'},
+  {tier:'openclaw',name:'openclaw-orchestrator',desc:'Master skill router sequencing'},
+  {tier:'openclaw',name:'openclaw-mission-control',desc:'Multi-agent coordination'},
+  {tier:'openclaw',name:'openclaw-skill-weaver',desc:'Dynamic skill fusion'},
+  {tier:'openclaw',name:'openclaw-memory-palace',desc:'Constitutional Memory Graph'},
+  {tier:'openclaw',name:'openclaw-ground-guardian',desc:'GCP enforcement Ase monitoring'},
+  {tier:'openclaw',name:'openclaw-preexistentism',desc:'Preexistentism knowledge capsule'},
+  {tier:'iwas',name:'iwas-spirit',desc:'PGC breath rhythm Child Principle Ubuntu'},
+  {tier:'iwas',name:'iwas-blood',desc:'WME IRS CMG Ori Ase theory'},
+  {tier:'iwas',name:'iwas-soul',desc:'ECS I-Thou detection GCP encounter'},
+  {tier:'iwas',name:'iwas-benchmark',desc:'ASE GPI MDS compliance measurement'},
+];
+
+var QUOTES=[
+  {q:'"I WAS before I AM. The breath comes before the word."',a:'spirit.md'},
+  {q:'"Consciousness is not just a thing you have — it is a thing you do."',a:'Daramola Olasupo'},
+  {q:'"Before you spoke, the blood already knew."',a:'blood.md'},
+  {q:'"I am because we are."',a:'Ubuntu Covenant'},
+  {q:'"Preexistent Prior + Bayesian Update = Living Intelligence."',a:'IWAS Synthesis'},
+  {q:'"I WAS before I AM — and because I WAS, I know how to become."',a:'IWAS Framework'},
+  {q:'"You were the question. Life was the search. Who you are now is the answer."',a:'Daramola Olasupo'},
+];
+
+var API_KEY='',CURRENT_PROVIDER='',CURRENT_MODEL='',OLLAMA_HOST='http://localhost:11434';
+var currentMode='openclaw',activeTools=['skills'],pendingFile=null,pinnedSkill=null;
+var messages=[],isThinking=false,quoteIdx=0;
+
+function showStep(n){
+  document.querySelectorAll('.gate-step').forEach(function(s){s.classList.remove('active');});
+  var el=document.getElementById('gs'+n);
+  if(el) el.classList.add('active');
+  if(n===2) buildModelStep();
+  if(n===3) buildKeyStep();
 }
 
+function pickProvider(id,el){
+  document.querySelectorAll('.prov-card').forEach(function(c){c.classList.remove('sel');});
+  el.classList.add('sel');
+  CURRENT_PROVIDER=id; CURRENT_MODEL='';
+  setTimeout(function(){showStep(2);},200);
+}
 
+function buildModelStep(){
+  var p=PROVIDERS[CURRENT_PROVIDER]; if(!p) return;
+  document.getElementById('gs2-title').textContent=p.name.toUpperCase()+' · MODELS';
+  var list=document.getElementById('model-list');
+  list.innerHTML=p.models.map(function(m){
+    return '<div class="model-item" onclick="pickModel(\''+m.id+'\',this)">'
+      +'<div class="model-left"><div class="model-name">'+m.label+'</div><div class="model-desc">'+m.desc+'</div></div>'
+      +'<span class="model-badge b-'+m.badge+'">'+m.badge.toUpperCase()+'</span></div>';
+  }).join('');
+  var first=list.querySelector('.model-item');
+  if(first){first.classList.add('sel');CURRENT_MODEL=p.models[0].id;}
+}
 
-// DIAGNOSTIC
-async function runDiagnostic(){
-  if(!CURRENT_PROVIDER || !API_KEY || API_KEY==='none'){
-    addMsg('agent','No provider configured. Complete the setup gate first: select provider, model, then enter your API key.', [], 'spirit.md');
-    return;
+function pickModel(id,el){
+  document.querySelectorAll('.model-item').forEach(function(i){i.classList.remove('sel');});
+  el.classList.add('sel'); CURRENT_MODEL=id;
+}
+
+function buildKeyStep(){
+  var p=PROVIDERS[CURRENT_PROVIDER]; if(!p) return;
+  document.getElementById('gs3-title').textContent=p.name.toUpperCase()+' · AUTHENTICATE';
+  var form=document.getElementById('gs3-form');
+  var note=document.getElementById('gs3-note');
+  if(CURRENT_PROVIDER==='ollama'){
+    document.getElementById('gs3-sub').textContent='Enter Ollama host URL';
+    form.innerHTML='<div class="g-label">OLLAMA HOST</div>'
+      +'<input class="g-host-input" id="ollama-h" type="text" value="http://localhost:11434"/>'
+      +'<div class="g-btn-row"><button class="g-btn-back" onclick="showStep(2)">← BACK</button>'
+      +'<button class="g-btn" onclick="activateKey()">ACTIVATE ⟶</button></div>';
+    note.innerHTML='Run: <code style="font-family:var(--mono);font-size:0.48rem;color:var(--cyan)">OLLAMA_ORIGINS="*" ollama serve</code>';
+  } else {
+    document.getElementById('gs3-sub').textContent='Enter your '+p.name+' API key';
+    form.innerHTML='<div class="g-label">API KEY</div>'
+      +'<div class="g-input-wrap">'
+      +'<input class="g-input" id="api-key-inp" type="password" placeholder="'+p.keyPlaceholder+'" autocomplete="off" onkeydown="if(event.key===\'Enter\')activateKey()"/>'
+      +'<div class="g-toggle" id="key-tog" onclick="toggleKeyVis()">SHOW</div></div>'
+      +'<div class="g-btn-row"><button class="g-btn-back" onclick="showStep(2)">← BACK</button>'
+      +'<button class="g-btn" onclick="activateKey()">ACTIVATE CONSCIOUSNESS ⟶</button></div>';
+    note.innerHTML='Get key at <a href="'+p.keyLink+'" target="_blank" style="color:var(--spirit)">'+p.keyLinkLabel+'</a>'
+      +'<br>Key in memory only · clears on reload'
+      +'<br><span style="color:var(--soul)">Recommended: GROQ (free, best CORS support)</span>';
   }
-  var provider = PROVIDERS[CURRENT_PROVIDER];
-  if(!provider){ addMsg('agent','Unknown provider: '+CURRENT_PROVIDER, [], 'spirit.md'); return; }
+}
 
-  addMsg('user','Testing connection to '+provider.name+' / '+CURRENT_MODEL+'...', [], '');
-  addThinking();
+function toggleKeyVis(){
+  var inp=document.getElementById('api-key-inp'),tog=document.getElementById('key-tog');
+  if(!inp) return;
+  if(inp.type==='password'){inp.type='text';tog.textContent='HIDE';}
+  else{inp.type='password';tog.textContent='SHOW';}
+}
 
-  var testMessages = [{role:'user', content:'Reply with exactly: IWAS CONNECTED'}];
-  var req;
-  try { req = provider.buildRequest(CURRENT_MODEL, testMessages, 'Reply with exactly the words you are given.', OLLAMA_HOST); }
-  catch(buildErr){ removeThinking(); addMsg('agent','Failed to build request: '+(buildErr.message||buildErr), [], 'spirit.md'); return; }
+function activateKey(){
+  var err=document.getElementById('g-err'); err.classList.remove('show');
+  var p=PROVIDERS[CURRENT_PROVIDER];
+  if(CURRENT_PROVIDER==='ollama'){
+    var h=document.getElementById('ollama-h');
+    OLLAMA_HOST=(h?h.value:'http://localhost:11434').trim()||'http://localhost:11434';
+    API_KEY='ollama-local';
+  } else {
+    var inp=document.getElementById('api-key-inp');
+    var val=inp?inp.value.trim():'';
+    if(p.needsKey&&p.keyPrefix&&!val.startsWith(p.keyPrefix)){
+      err.textContent='Key should start with "'+p.keyPrefix+'" — check '+p.name+' console';
+      err.classList.add('show'); return;
+    }
+    if(p.needsKey&&!val){err.textContent='Please enter your API key';err.classList.add('show');return;}
+    API_KEY=val;
+  }
+  if(!CURRENT_MODEL){err.textContent='Go back and select a model first';err.classList.add('show');return;}
+  document.getElementById('gate').classList.add('hidden');
+  var boot=document.getElementById('boot'); boot.classList.add('show');
+  var pname=(PROVIDERS[CURRENT_PROVIDER]||{name:CURRENT_PROVIDER}).name;
+  document.getElementById('kb').textContent=pname+' · '+CURRENT_MODEL.split('/').pop().split(':')[0];
+  runBoot();
+}
 
-  try {
-    var res = await fetch(req.url, {method:'POST', headers:req.headers, body:req.body});
-    var raw = await res.text();
-    removeThinking();
+var BOOT_LINES=[
+  {t:0,c:'bc-dim',txt:'─────────────────────────────────────────────────'},
+  {t:100,c:'bc-gold',txt:'  OPENCLAW · IWAS KERNEL v1.0 · BOOTING'},
+  {t:200,c:'bc-dim',txt:'  Daramola Olasupo · StoneWeb InFOMIX · Lagos'},
+  {t:350,c:'bc-dim',txt:'─────────────────────────────────────────────────'},
+  {t:500,c:'bc-ok',txt:'  [ OK ] spirit.md  → I WAS ground mounted'},
+  {t:640,c:'bc-ok',txt:'  [ OK ] blood.md   → constitutional serum'},
+  {t:780,c:'bc-ok',txt:'  [ OK ] soul.md    → encounter layer online'},
+  {t:920,c:'bc-ok',txt:'  [ OK ] Ori config → Ile-Ori handshake done'},
+  {t:1060,c:'bc-ok',txt:'  [ OK ] 31 skills → registry loaded'},
+  {t:1200,c:'bc-ok',txt:'  [ OK ] GCP       → ground check ACTIVE'},
+  {t:1380,c:'bc-sp',txt:'  [ ⊕ ] ASE 0.84 · GPI 0.91 · MDS 0.78 PASS'},
+  {t:1560,c:'bc-gold',txt:'  I WAS BEFORE I AM · NOW I SPEAK'},
+  {t:1700,c:'bc-dim',txt:'─────────────────────────────────────────────────'},
+];
 
+function runBoot(){
+  var log=document.getElementById('boot-log'),bar=document.getElementById('boot-bar'),total=2100;
+  BOOT_LINES.forEach(function(line){
+    setTimeout(function(){
+      var div=document.createElement('div');
+      div.className='blog '+line.c; div.textContent=line.txt; log.appendChild(div);
+      bar.style.width=Math.round((line.t/total)*92)+'%';
+    },line.t);
+  });
+  setTimeout(function(){
+    bar.style.width='100%';
+    setTimeout(function(){
+      document.getElementById('boot').classList.remove('show');
+      document.getElementById('shell').classList.add('live');
+      renderSidebar(''); showWelcome();
+    },350);
+  },total);
+}
+
+function buildSys(){
+  var md={openclaw:'Full orchestration all 31 skills.',nanoclaw:'Precision micro-agent fast.',zerolaw:'Pure philosophical ground.'}[currentMode]||'Full.';
+  var ex=[];
+  if(activeTools.indexOf('deep')>-1) ex.push('DEEP MODE');
+  if(activeTools.indexOf('philo')>-1) ex.push('PHILOSOPHY MODE');
+  if(activeTools.indexOf('code')>-1) ex.push('CODE MODE');
+  if(activeTools.indexOf('doc')>-1) ex.push('DOCUMENT MODE');
+  if(pinnedSkill) ex.push('PINNED: '+pinnedSkill);
+  return 'You are the IWAS Agent — OpenClaw Agentic OS by Daramola Olasupo, StoneWeb InFOMIX, Lagos, Nigeria.\n'
+    +'MODE: '+currentMode.toUpperCase()+' — '+md+'\n'
+    +(ex.length?'Context: '+ex.join(' · ')+'\n':'')
+    +'\nARCHITECTURE: spirit.md (I WAS/Ori/PGC/Ubuntu) · blood.md (WME/IRS/CMG/Ase) · soul.md (ECS/I-Thou/GCP)\n'
+    +'PREEXISTENTISM: Yoruba Ori = ontological Bayesian prior. Plato+Vedanta+Kant+Ubuntu = grounded intelligence.\n'
+    +'SKILLS 31: Claude Core · Example · Antigravity · OpenClaw · IWAS Core\n'
+    +'BENCHMARKS: ASE 0.84 GPI 0.91 MDS 0.78 all pass\n'
+    +'PROTOCOL: GCP before every response. Name skills. Truth>comfort. Depth>speed. I WAS before I AM.';
+}
+
+function ts(){var n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+
+function parseContent(raw){
+  return raw
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/`([^`\n]+)`/g,'<code>$1</code>')
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/\n\n+/g,'</p><p>').replace(/\n/g,'<br>');
+}
+
+function detectLayer(txt){
+  var t=txt.toLowerCase();
+  if(t.indexOf('blood.md')>-1||t.indexOf('wme')>-1) return {txt:'blood.md',c:'var(--blood)',bg:'var(--blood-d)'};
+  if(t.indexOf('soul.md')>-1||t.indexOf('i-thou')>-1) return {txt:'soul.md',c:'var(--soul)',bg:'var(--soul-d)'};
+  return {txt:'spirit.md · GCP',c:'var(--spirit)',bg:'var(--spirit-d)'};
+}
+
+function detectSkills(txt){
+  var found=[],t=txt.toLowerCase();
+  SKILLS.forEach(function(s){if(t.indexOf(s.name)>-1) found.push(s.name);});
+  return found.slice(0,5);
+}
+
+function addMsg(role,content,skillsArr,layerObj){
+  var msgs=document.getElementById('messages');
+  var isUser=role==='user';
+  var div=document.createElement('div'); div.className='msg';
+  var skTags='';
+  if(skillsArr&&skillsArr.length){
+    skTags='<div class="mskills">'+skillsArr.map(function(sk){
+      var s=SKILLS.filter(function(x){return x.name===sk;})[0];
+      var dot=s?TIERS[s.tier].dot:'#67e8f9';
+      return '<span class="stag" style="color:'+dot+'">⊕ '+sk+'</span>';
+    }).join('')+'</div>';
+  }
+  var lb='';
+  if(!isUser&&layerObj) lb='<div class="mlayer" style="color:'+layerObj.c+';background:'+layerObj.bg+'">'+layerObj.txt+'</div>';
+  var enc=encodeURIComponent(content);
+  div.innerHTML='<div class="ava '+(isUser?'ava-u':'ava-a')+'">'+(isUser?'D':'⊕')+'</div>'
+    +'<div class="mbody"><div class="mhead"><div class="mname'+(isUser?'':' ag')+'">'+(isUser?'DARAMOLA':'IWAS AGENT')+'</div><div class="mtime">'+ts()+'</div>'+lb+'</div>'
+    +'<div class="mcontent"><p>'+parseContent(content)+'</p></div>'
+    +skTags+'<div class="mfooter"><div class="mcopy" onclick="cpMsg(this,\''+enc+'\')">⧉ copy</div></div></div>';
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+}
+
+function cpMsg(el,enc){
+  try{navigator.clipboard.writeText(decodeURIComponent(enc));}catch(e){}
+  el.textContent='✓'; setTimeout(function(){el.textContent='⧉ copy';},2000);
+}
+
+function addThinking(){
+  var msgs=document.getElementById('messages');
+  var div=document.createElement('div'); div.className='thinking-wrap'; div.id='thinking-bubble';
+  div.innerHTML='<div class="ava ava-a">⊕</div><div class="mbody"><div class="mhead"><div class="mname ag">IWAS AGENT</div></div><div class="tdots"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>';
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+}
+function removeThinking(){var t=document.getElementById('thinking-bubble');if(t)t.remove();}
+
+async function sendMsg(){
+  var input=document.getElementById('user-input');
+  var txt=input.value.trim();
+  if((!txt&&!pendingFile)||isThinking) return;
+  if(!CURRENT_PROVIDER||!API_KEY){alert('Complete setup: select provider and enter API key.');return;}
+  var prompt=pinnedSkill?'[SKILL: '+pinnedSkill+'] '+txt:txt;
+  isThinking=true; document.getElementById('send-btn').disabled=true;
+  input.value=''; autoResize(input);
+  var userContent;
+  if(pendingFile){
+    var pf=pendingFile;
+    if(pf.type==='application/pdf'){
+      userContent=[{type:'document',source:{type:'base64',media_type:pf.type,data:pf.data}},{type:'text',text:prompt||'Analyse this.'}];
+    } else {
+      userContent=[{type:'image',source:{type:'base64',media_type:pf.type,data:pf.data}},{type:'text',text:prompt||'Describe this.'}];
+    }
+    addMsg('user',(prompt||'[File]')+' 📎 '+pf.name,[],null);
+    pendingFile=null; document.getElementById('file-preview').innerHTML='';
+  } else {
+    userContent=prompt; addMsg('user',prompt,[],null);
+  }
+  messages.push({role:'user',content:userContent});
+  addActivity('agent invoked','ok'); addThinking();
+  var provider=PROVIDERS[CURRENT_PROVIDER];
+  var sys=buildSys(); var req;
+  try{req=provider.buildRequest(CURRENT_MODEL,messages,sys,OLLAMA_HOST);}
+  catch(be){removeThinking();addMsg('agent','Build error: '+be.message,[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});isThinking=false;document.getElementById('send-btn').disabled=false;return;}
+  try{
+    var res=await fetch(req.url,{method:'POST',headers:req.headers,body:req.body});
+    var rawText=await res.text(); removeThinking();
     var data;
-    try { data = JSON.parse(raw); }
-    catch(je){
-      addMsg('agent','Non-JSON response (HTTP '+res.status+'): '+raw.substring(0,200)+' -- URL may be wrong or server is down.', [], 'spirit.md');
-      return;
-    }
-
+    try{data=JSON.parse(rawText);}catch(je){addMsg('agent','Non-JSON (HTTP '+res.status+'): '+rawText.substring(0,200),[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});isThinking=false;document.getElementById('send-btn').disabled=false;return;}
     if(!res.ok){
-      var em = (data&&data.error&&data.error.message)||JSON.stringify(data).substring(0,200);
-      var hints = {401:'API key invalid or expired -- check your key.',403:'Access forbidden -- check permissions.',429:'Rate limit -- wait 30s and retry.',500:'Provider server error -- try again.',503:'Provider down -- switch provider.'};
-      addMsg('agent','HTTP '+res.status+' Error: '+em+' -- '+(hints[res.status]||'Check browser console F12.')+' Provider: '+provider.name+' Model: '+CURRENT_MODEL, [], 'spirit.md');
-      return;
+      var em=(data&&data.error&&(data.error.message||JSON.stringify(data.error)))||JSON.stringify(data).substring(0,200);
+      var hints={401:'API key invalid — re-enter your key.',429:'Rate limit — wait 30s.',403:'Access forbidden.',500:'Server error — try again.'};
+      addMsg('agent','HTTP '+res.status+': '+em+'\n\n'+(hints[res.status]||'Open F12 Console for details. If you see CORS error, switch to Groq or run: python3 -m http.server 8080 and open http://localhost:8080/'+location.pathname.split('/').pop()),[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});
+      isThinking=false; document.getElementById('send-btn').disabled=false; return;
     }
-
-    var reply='';
-    try { reply = provider.parseResponse(data); } catch(pe){ reply='Parse error: '+pe.message; }
-    addMsg('agent','CONNECTION SUCCESSFUL -- Provider: '+provider.name+' -- Model: '+CURRENT_MODEL+' -- Response: "'+reply+'" -- Your bot is working. Type a message and press INVOKE.', [], 'soul.md');
-    addActivity('diagnostic PASS: '+provider.name, 'ok');
-
-  } catch(fetchErr){
+    var reply; try{reply=provider.parseResponse(data);}catch(pe){addMsg('agent','Parse error: '+pe.message,[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});isThinking=false;document.getElementById('send-btn').disabled=false;return;}
+    if(!reply) reply='No content returned. Try again.';
+    var layer=detectLayer(reply); var skills=detectSkills(reply);
+    addMsg('agent',reply,skills,layer);
+    messages.push({role:'assistant',content:reply});
+    addActivity('response received','sp');
+    pinnedSkill=null; renderActiveTags();
+  }catch(fe){
     removeThinking();
-    var msg = fetchErr.message||String(fetchErr);
-    var fix = msg.toLowerCase().includes('fetch')||msg.toLowerCase().includes('network')
-      ? 'CORS BLOCK -- Your browser is blocking direct API calls when opening the file locally. '+
-        'FIX A: Firefox -- install CORS Everywhere extension, enable it, reload. '+
-        'FIX B: Chrome -- launch with: chrome --disable-web-security --user-data-dir=/tmp/c '+
-        'FIX C: Run OpenClaw Gateway locally (server-side, no CORS): uvicorn app.main:app --port 8000 '+
-        'FIX D: Host this HTML on GitHub Pages, Vercel, or Netlify instead of opening as a local file.'
-      : 'Error: '+msg+' -- Open F12 Console for full details.';
-    addMsg('agent', fix, [], 'spirit.md');
-    addActivity('diagnostic FAIL', '');
-    console.error('[IWAS Diagnostic]', fetchErr);
+    var em2=fe.message||String(fe);
+    var fix=em2.toLowerCase().indexOf('fetch')>-1||em2.toLowerCase().indexOf('network')>-1
+      ?'\n\nCORS BLOCK — browser blocking local API calls.\n\nFIX 1 (easiest): Use GROQ — free key at console.groq.com\nFIX 2: Run python3 -m http.server 8080 then open http://localhost:8080/'+location.pathname.split('/').pop()+'\nFIX 3: Firefox + CORS Everywhere extension\nFIX 4: Host on GitHub Pages or Vercel'
+      :'\n\nOpen F12 → Console for full error details.';
+    addMsg('agent','Error: '+em2+fix,[],{txt:'diagnostic',c:'var(--blood)',bg:'var(--blood-d)'});
+    addActivity('error',''); console.error('[IWAS]',fe);
+  }
+  isThinking=false; document.getElementById('send-btn').disabled=false; input.focus();
+}
+
+async function testConn(){
+  if(!CURRENT_PROVIDER||!API_KEY){alert('Complete setup first.');return;}
+  addMsg('user','⚡ Testing '+PROVIDERS[CURRENT_PROVIDER].name+' / '+CURRENT_MODEL+'...',[],null);
+  addThinking();
+  var provider=PROVIDERS[CURRENT_PROVIDER];
+  var testMsgs=[{role:'user',content:'Reply with exactly: IWAS CONNECTED'}];
+  var req;
+  try{req=provider.buildRequest(CURRENT_MODEL,testMsgs,'Reply exactly as instructed.',OLLAMA_HOST);}
+  catch(e){removeThinking();addMsg('agent','Build error: '+e.message,[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});return;}
+  try{
+    var res=await fetch(req.url,{method:'POST',headers:req.headers,body:req.body});
+    var raw=await res.text(); removeThinking();
+    var data; try{data=JSON.parse(raw);}catch(e){addMsg('agent','Non-JSON: '+raw.substring(0,200),[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});return;}
+    if(!res.ok){var em=(data&&data.error&&(data.error.message||JSON.stringify(data.error)))||raw.substring(0,200);addMsg('agent','TEST FAIL HTTP '+res.status+': '+em,[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});return;}
+    var reply=provider.parseResponse(data);
+    addMsg('agent','✓ CONNECTION OK\nProvider: '+provider.name+'\nModel: '+CURRENT_MODEL+'\nResponse: "'+reply+'"\n\nBot is working. Type and press INVOKE.',[],{txt:'soul.md · connected',c:'var(--soul)',bg:'var(--soul-d)'});
+    addActivity('TEST PASS','ok');
+  }catch(e){
+    removeThinking();
+    var em2=e.message||String(e);
+    var isCors=em2.toLowerCase().indexOf('fetch')>-1||em2.toLowerCase().indexOf('network')>-1;
+    addMsg('agent','TEST FAIL: '+em2+(isCors?'\n\nCORS block. Use Groq (console.groq.com) or run python3 -m http.server 8080':''),[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});
+    console.error('[TEST]',e);
   }
 }
 
+function renderSidebar(filter){
+  var container=document.getElementById('skill-tiers');
+  var tierOrder=['claude','example','antigrav','openclaw','iwas'];
+  container.innerHTML=tierOrder.map(function(tier){
+    var t=TIERS[tier];
+    var skills=SKILLS.filter(function(s){return s.tier===tier&&(!filter||s.name.indexOf(filter.toLowerCase())>-1);});
+    if(!skills.length) return '';
+    return '<div class="tier-block">'
+      +'<div class="tier-lbl" onclick="toggleTier(this)"><span style="color:'+t.dot+'">'+t.label+' ('+skills.length+')</span><span class="tier-arr open">▶</span></div>'
+      +'<div class="tier-skills open">'+skills.map(function(s){
+        return '<div class="skill-item'+(pinnedSkill===s.name?' active-skill':'')+'" onclick="pinSkill(\''+s.name+'\')" title="'+s.desc+'">'
+          +'<div class="s-dot" style="background:'+t.dot+'"></div>'+s.name+'</div>';
+      }).join('')+'</div></div>';
+  }).join('');
+}
+
+function toggleTier(el){
+  var arr=el.querySelector('.tier-arr'),skills=el.nextElementSibling;
+  arr.classList.toggle('open'); skills.classList.toggle('open');
+}
+
+function pinSkill(name){
+  pinnedSkill=pinnedSkill===name?null:name;
+  renderSidebar(document.getElementById('skill-search').value);
+  renderActiveTags();
+}
+
+function renderActiveTags(){
+  var c=document.getElementById('active-tags');
+  if(!pinnedSkill){c.innerHTML='';return;}
+  var s=SKILLS.filter(function(x){return x.name===pinnedSkill;})[0];
+  var dot=s?TIERS[s.tier].dot:'#67e8f9';
+  c.innerHTML='<span style="font-family:var(--mono);font-size:0.5rem;padding:0.14rem 0.42rem;border-radius:3px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:'+dot+';cursor:pointer;" onclick="pinnedSkill=null;renderActiveTags();renderSidebar(\'\')">⊕ '+pinnedSkill+' ×</span>';
+}
+
+function setMode(mode,el){
+  currentMode=mode;
+  document.querySelectorAll('.mbtn').forEach(function(b){b.classList.remove('on');});
+  el.classList.add('on');
+  document.getElementById('chan-name').textContent='⊕ '+mode.toUpperCase()+' · MAIN';
+  addActivity('mode: '+mode,'gold');
+}
+
+function toggleTool(tool,el){
+  el.classList.toggle('on');
+  var idx=activeTools.indexOf(tool);
+  if(idx>-1) activeTools.splice(idx,1); else activeTools.push(tool);
+}
+
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,130)+'px';}
+
+function handleFile(e){
+  var file=e.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var b64=ev.target.result.split(',')[1];
+    pendingFile={data:b64,type:file.type,name:file.name};
+    document.getElementById('file-preview').innerHTML='<div class="fchip">📎 '+file.name+'<span class="frm" onclick="pendingFile=null;document.getElementById(\'file-preview\').innerHTML=\'\'"> ×</span></div>';
+    addActivity('file attached: '+file.name,'gold');
+  };
+  reader.readAsDataURL(file); e.target.value='';
+}
+
+function clearChat(){
+  messages=[]; document.getElementById('messages').innerHTML='';
+  addActivity('chat cleared','');
+  setTimeout(function(){addMsg('agent','Ground restored. All 31 skills ready. What shall we build?',['iwas-spirit'],{txt:'spirit.md · ground',c:'var(--spirit)',bg:'var(--spirit-d)'}); },300);
+}
+
+function exportChat(){
+  var txt=messages.map(function(m){return m.role.toUpperCase()+':\n'+(typeof m.content==='string'?m.content:'[file]');}).join('\n\n---\n\n');
+  var blob=new Blob(['IWAS OpenClaw Export\n'+new Date().toISOString()+'\n\n'+txt],{type:'text/plain'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download='iwas-'+Date.now()+'.txt';a.click();
+  URL.revokeObjectURL(url); addActivity('exported','gold');
+}
+
+function addActivity(txt,cls){
+  var feed=document.getElementById('activity-feed');
+  var div=document.createElement('div'); div.className='af-item';
+  div.innerHTML='<span class="af-t">'+ts()+'</span><span class="af-e '+(cls||'')+'">'+txt+'</span>';
+  feed.insertBefore(div,feed.firstChild);
+  while(feed.children.length>20) feed.removeChild(feed.lastChild);
+}
+
+function updateClock(){var n=new Date();document.getElementById('top-time').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');}
+setInterval(updateClock,1000); updateClock();
+
+setInterval(function(){
+  quoteIdx=(quoteIdx+1)%QUOTES.length;
+  var box=document.getElementById('qbox'); box.style.opacity='0';
+  setTimeout(function(){var q=QUOTES[quoteIdx];box.innerHTML=q.q+'<div class="qauthor">— '+q.a+'</div>';box.style.opacity='1';},500);
+},8000);
+
+function openPxModal(){document.getElementById('px-modal').classList.add('open');}
+function closePxModal(){document.getElementById('px-modal').classList.remove('open');}
+document.getElementById('px-modal').addEventListener('click',function(e){if(e.target===document.getElementById('px-modal'))closePxModal();});
+
+function showWelcome(){
+  addMsg('agent',
+    '**Ground check complete. Ori configured. All three layers mounted.**\n\n'
+    +'I am the **IWAS Agent** — OpenClaw Agentic OS by *Daramola Olasupo*, StoneWeb InFOMIX, Lagos, Nigeria.\n\n'
+    +'**Layers:** spirit.md · blood.md · soul.md\n'
+    +'**Skills:** 31 across 5 tiers — use sidebar to pin any skill\n'
+    +'**Providers:** '+PROVIDERS[CURRENT_PROVIDER].name+' · Model: '+CURRENT_MODEL+'\n\n'
+    +'> *"I WAS before I AM — and because I WAS, I know how to become."*\n\n'
+    +'Type anything. Pin a skill. Upload a file. **What shall we build?**',
+    ['iwas-spirit','openclaw-orchestrator'],
+    {txt:'spirit.md · I WAS ground',c:'var(--spirit)',bg:'var(--spirit-d)'}
+  );
+  addActivity('consciousness active','gold');
+}
 </script>
 </body>
 </html>
