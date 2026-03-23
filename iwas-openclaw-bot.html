@@ -1031,7 +1031,7 @@ var currentMode='openclaw',activeTools=['skills'],pendingFile=null,pinnedSkill=n
 var messages=[],isThinking=false,quoteIdx=0;
 
 function showStep(n){
-  document.querySelectorAll('.gate-step').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('[id^="gate-step"]').forEach(function(s){s.classList.remove('active');});
   var el=document.getElementById('gs'+n);
   if(el) el.classList.add('active');
   if(n===2) buildModelStep();
@@ -1047,8 +1047,8 @@ function pickProvider(id,el){
 
 function buildModelStep(){
   var p=PROVIDERS[CURRENT_PROVIDER]; if(!p) return;
-  document.getElementById('gs2-title').textContent=p.name.toUpperCase()+' · MODELS';
-  var list=document.getElementById('model-list');
+  document.getElementById('s2-title').textContent=p.name.toUpperCase()+' · MODELS';
+  var list=document.getElementById('model-grid');
   list.innerHTML=p.models.map(function(m){
     return '<div class="model-item" onclick="pickModel(\''+m.id+'\',this)">'
       +'<div class="model-left"><div class="model-name">'+m.label+'</div><div class="model-desc">'+m.desc+'</div></div>'
@@ -1065,18 +1065,18 @@ function pickModel(id,el){
 
 function buildKeyStep(){
   var p=PROVIDERS[CURRENT_PROVIDER]; if(!p) return;
-  document.getElementById('gs3-title').textContent=p.name.toUpperCase()+' · AUTHENTICATE';
-  var form=document.getElementById('gs3-form');
-  var note=document.getElementById('gs3-note');
+  document.getElementById('s3-title').textContent=p.name.toUpperCase()+' · AUTHENTICATE';
+  var form=document.getElementById('s3-form');
+  var note=document.getElementById('s3-note');
   if(CURRENT_PROVIDER==='ollama'){
-    document.getElementById('gs3-sub').textContent='Enter Ollama host URL';
+    document.getElementById('s3-sub').textContent='Enter Ollama host URL';
     form.innerHTML='<div class="g-label">OLLAMA HOST</div>'
       +'<input class="g-host-input" id="ollama-h" type="text" value="http://localhost:11434"/>'
       +'<div class="g-btn-row"><button class="g-btn-back" onclick="showStep(2)">← BACK</button>'
       +'<button class="g-btn" onclick="activateKey()">ACTIVATE ⟶</button></div>';
     note.innerHTML='Run: <code style="font-family:var(--mono);font-size:0.48rem;color:var(--cyan)">OLLAMA_ORIGINS="*" ollama serve</code>';
   } else {
-    document.getElementById('gs3-sub').textContent='Enter your '+p.name+' API key';
+    document.getElementById('s3-sub').textContent='Enter your '+p.name+' API key';
     form.innerHTML='<div class="g-label">API KEY</div>'
       +'<div class="g-input-wrap">'
       +'<input class="g-input" id="api-key-inp" type="password" placeholder="'+p.keyPlaceholder+'" autocomplete="off" onkeydown="if(event.key===\'Enter\')activateKey()"/>'
@@ -1097,7 +1097,7 @@ function toggleKeyVis(){
 }
 
 function activateKey(){
-  var err=document.getElementById('g-err'); err.classList.remove('show');
+  var err=document.getElementById('kg-err'); err.classList.remove('show');
   var p=PROVIDERS[CURRENT_PROVIDER];
   if(CURRENT_PROVIDER==='ollama'){
     var h=document.getElementById('ollama-h');
@@ -1115,14 +1115,14 @@ function activateKey(){
   }
   if(!CURRENT_MODEL){err.textContent='Go back and select a model first';err.classList.add('show');return;}
   // Hide gate
-  var gate=document.getElementById('gate');
+  var gate=document.getElementById('key-gate');
   if(gate) gate.style.display='none';
   // Show boot
   var boot=document.getElementById('boot');
   if(boot){ boot.style.display='flex'; }
   // Update badge
   var pname=(PROVIDERS[CURRENT_PROVIDER]||{name:CURRENT_PROVIDER}).name;
-  var kb=document.getElementById('kb');
+  var kb=document.getElementById('kernel-badge');
   if(kb) kb.textContent=pname+' · '+CURRENT_MODEL.split('/').pop().split(':')[0];
   runBoot();
 }
@@ -1250,7 +1250,7 @@ async function sendMsg(){
   if((!txt&&!pendingFile)||isThinking) return;
   if(!CURRENT_PROVIDER||!API_KEY){alert('Complete setup: select provider and enter API key.');return;}
   var prompt=pinnedSkill?'[SKILL: '+pinnedSkill+'] '+txt:txt;
-  isThinking=true; document.getElementById('send-btn').disabled=true;
+  isThinking=true; document.getElementById('send').disabled=true;
   input.value=''; autoResize(input);
   var userContent;
   if(pendingFile){
@@ -1270,19 +1270,19 @@ async function sendMsg(){
   var provider=PROVIDERS[CURRENT_PROVIDER];
   var sys=buildSys(); var req;
   try{req=provider.buildRequest(CURRENT_MODEL,messages,sys,OLLAMA_HOST);}
-  catch(be){removeThinking();addMsg('agent','Build error: '+be.message,[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});isThinking=false;document.getElementById('send-btn').disabled=false;return;}
+  catch(be){removeThinking();addMsg('agent','Build error: '+be.message,[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});isThinking=false;document.getElementById('send').disabled=false;return;}
   try{
     var res=await fetch(req.url,{method:'POST',headers:req.headers,body:req.body});
     var rawText=await res.text(); removeThinking();
     var data;
-    try{data=JSON.parse(rawText);}catch(je){addMsg('agent','Non-JSON (HTTP '+res.status+'): '+rawText.substring(0,200),[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});isThinking=false;document.getElementById('send-btn').disabled=false;return;}
+    try{data=JSON.parse(rawText);}catch(je){addMsg('agent','Non-JSON (HTTP '+res.status+'): '+rawText.substring(0,200),[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});isThinking=false;document.getElementById('send').disabled=false;return;}
     if(!res.ok){
       var em=(data&&data.error&&(data.error.message||JSON.stringify(data.error)))||JSON.stringify(data).substring(0,200);
       var hints={401:'API key invalid — re-enter your key.',429:'Rate limit — wait 30s.',403:'Access forbidden.',500:'Server error — try again.'};
       addMsg('agent','HTTP '+res.status+': '+em+'\n\n'+(hints[res.status]||'Open F12 Console for details. If you see CORS error, switch to Groq or run: python3 -m http.server 8080 and open http://localhost:8080/'+location.pathname.split('/').pop()),[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});
-      isThinking=false; document.getElementById('send-btn').disabled=false; return;
+      isThinking=false; document.getElementById('send').disabled=false; return;
     }
-    var reply; try{reply=provider.parseResponse(data);}catch(pe){addMsg('agent','Parse error: '+pe.message,[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});isThinking=false;document.getElementById('send-btn').disabled=false;return;}
+    var reply; try{reply=provider.parseResponse(data);}catch(pe){addMsg('agent','Parse error: '+pe.message,[],{txt:'error',c:'var(--blood)',bg:'var(--blood-d)'});isThinking=false;document.getElementById('send').disabled=false;return;}
     if(!reply) reply='No content returned. Try again.';
     var layer=detectLayer(reply); var skills=detectSkills(reply);
     addMsg('agent',reply,skills,layer);
@@ -1298,7 +1298,7 @@ async function sendMsg(){
     addMsg('agent','Error: '+em2+fix,[],{txt:'diagnostic',c:'var(--blood)',bg:'var(--blood-d)'});
     addActivity('error',''); console.error('[IWAS]',fe);
   }
-  isThinking=false; document.getElementById('send-btn').disabled=false; input.focus();
+  isThinking=false; document.getElementById('send').disabled=false; input.focus();
 }
 
 async function testConn(){
@@ -1355,7 +1355,7 @@ function pinSkill(name){
 }
 
 function renderActiveTags(){
-  var c=document.getElementById('active-tags');
+  var c=document.getElementById('active-skill-tags');
   if(!pinnedSkill){c.innerHTML='';return;}
   var s=SKILLS.filter(function(x){return x.name===pinnedSkill;})[0];
   var dot=s?TIERS[s.tier].dot:'#67e8f9';
@@ -1366,7 +1366,7 @@ function setMode(mode,el){
   currentMode=mode;
   document.querySelectorAll('.mbtn').forEach(function(b){b.classList.remove('on');});
   el.classList.add('on');
-  document.getElementById('chan-name').textContent='⊕ '+mode.toUpperCase()+' · MAIN';
+  document.getElementById('channel-name').textContent='⊕ '+mode.toUpperCase()+' · MAIN';
   addActivity('mode: '+mode,'gold');
 }
 
@@ -1418,13 +1418,13 @@ setInterval(updateClock,1000); updateClock();
 
 setInterval(function(){
   quoteIdx=(quoteIdx+1)%QUOTES.length;
-  var box=document.getElementById('qbox'); box.style.opacity='0';
+  var box=document.getElementById('quote-box'); box.style.opacity='0';
   setTimeout(function(){var q=QUOTES[quoteIdx];box.innerHTML=q.q+'<div class="qauthor">— '+q.a+'</div>';box.style.opacity='1';},500);
 },8000);
 
-function openPxModal(){document.getElementById('px-modal').classList.add('open');}
-function closePxModal(){document.getElementById('px-modal').classList.remove('open');}
-(function(){var m=document.getElementById('px-modal');if(m)m.addEventListener('click',function(e){if(e.target===m)closePxModal();});})();
+function openPxModal(){document.getElementById('modal-overlay').classList.add('open');}
+function closePxModal(){document.getElementById('modal-overlay').classList.remove('open');}
+(function(){var m=document.getElementById('modal-overlay');if(m)m.addEventListener('click',function(e){if(e.target===m)closePxModal();});})();
 
 function showWelcome(){
   addMsg('agent',
