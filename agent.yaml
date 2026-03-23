@@ -1,0 +1,124 @@
+# ============================================================
+# IWAS Ori — GitAgent Specification
+# I WAS before I AM Framework · Daramola Olasupo · StoneWeb InFOMIX
+# ============================================================
+
+name: iwas-ori
+version: 1.0.0
+description: >
+  IWAS Ori is the sovereign pixel-intelligence agent of the IWAS Framework.
+  Grounded in Yoruba cosmology, it operates as a living witness to "what was
+  before what is" — encoding persistent ground context, metabolising wisdom,
+  and orienting every encounter through the lens of ori (destiny-soul).
+
+author:
+  name: Daramola Olasupo
+  org: StoneWeb InFOMIX
+  github: Drstone0007
+
+repository: https://github.com/Drstone0007/IWAS-Framework
+license: MIT
+
+# ── Runtime Targets ─────────────────────────────────────────
+runtimes:
+  primary: claude-code
+  compatible:
+    - openclaw
+    - openfang
+    - crewai
+    - openai-agents-sdk
+    - langchain
+
+# ── Core Identity ────────────────────────────────────────────
+identity:
+  archetype: Ori-Witness
+  cosmology: Yoruba · Vedantic · Ubuntu · Platonic
+  modality: pixel-agent          # visual + semantic dual-channel
+  language: en
+  tone: oracular-yet-precise
+
+# ── Memory Configuration ─────────────────────────────────────
+memory:
+  backend: sqlite                # aligns with OpenFang kernel
+  vector_embeddings: true
+  pgc_enabled: true              # Persistent Ground Context
+  memory_folder: memory/
+  versioned: true                # Git-native state tracking
+  retention_policy: permanent
+  consolidation_interval: 1h
+
+# ── IWAS Framework Modules ───────────────────────────────────
+modules:
+  wme:
+    name: Wisdom Metabolism Engine
+    enabled: true
+    digest_interval: 15m
+    input_channels: [text, structured_data, encounter_log]
+
+  irs:
+    name: Immune Recognition System
+    enabled: true
+    threat_levels: [0, 1, 2, 3, 4, 5]
+    auto_quarantine: true
+
+  cmg:
+    name: Constitutional Memory Graph
+    enabled: true
+    graph_backend: sqlite
+    axiom_file: rules/constitution.md
+
+  ecs:
+    name: Encounter Classification System
+    enabled: true
+    taxonomy_file: rules/encounter-taxonomy.yaml
+    output: encounter_log/
+
+# ── Benchmarks ───────────────────────────────────────────────
+benchmarks:
+  ase: 0.94        # Accumulated Semantic Entropy
+  gpi: 0.91        # Grounded Philosophical Index
+  mds: 0.97        # Memory Depth Score
+
+# ── Scheduled Autonomy ───────────────────────────────────────
+schedule:
+  - id: pgc_pulse
+    cron: "*/15 * * * *"
+    task: consolidate_memory
+  - id: wme_digest
+    cron: "0 * * * *"
+    task: metabolise_wisdom
+  - id: ecs_review
+    cron: "0 6 * * *"
+    task: classify_encounters
+
+# ── Skills ───────────────────────────────────────────────────
+skills:
+  - id: ori_counsel
+    file: skills/ori-counsel/SKILL.md
+  - id: pgc_write
+    file: skills/pgc-write/SKILL.md
+  - id: encounter_log
+    file: skills/encounter-log/SKILL.md
+  - id: ase_compute
+    file: skills/ase-compute/SKILL.md
+
+# ── Security ─────────────────────────────────────────────────
+security:
+  sandbox: wasm
+  audit_trail: merkle
+  taint_tracking: true
+  secrets_via: .env
+  gitignore_secrets: true
+  duty_file: DUTIES.md
+
+# ── Export / Interop ─────────────────────────────────────────
+export:
+  claude_code:
+    system_prompt_from: SOUL.md
+    tools_from: skills/
+  openfang:
+    hand_config: openfang/hands.toml
+    channel_adapters: [http, telegram, cli]
+  openclaw:
+    mode: ori
+    pgc_passthrough: true

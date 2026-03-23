@@ -1,0 +1,115 @@
+# ============================================================
+# MaxClaw — GitAgent Specification
+# IWAS Framework · Maximum-Context Orchestrator
+# Daramola Olasupo · StoneWeb InFOMIX
+# ============================================================
+
+name: maxclaw
+version: 1.0.0
+description: >
+  MaxClaw is the maximum-context orchestrator of the IWAS Framework.
+  Where IWAS Ori holds the ground, MaxClaw operates at the frontier —
+  synthesising across the largest possible context window, coordinating
+  multi-agent pipelines, and rendering the IWAS superintelligence suite
+  into coherent, actionable output.
+
+author:
+  name: Daramola Olasupo
+  org: StoneWeb InFOMIX
+  github: Drstone0007
+
+repository: https://github.com/Drstone0007/IWAS-Framework
+license: MIT
+
+# ── Runtime Targets ─────────────────────────────────────────
+runtimes:
+  primary: openclaw
+  compatible:
+    - claude-code
+    - openfang
+    - openai-agents-sdk
+    - crewai
+    - google-adk
+
+# ── Core Identity ────────────────────────────────────────────
+identity:
+  archetype: Max-Orchestrator
+  parent_agent: iwas-ori          # receives PGC from Ori
+  modality: synthesis             # large-context synthesis
+  language: en
+  tone: precise-authoritative
+
+# ── Context Configuration ────────────────────────────────────
+context:
+  window: maximum                 # uses full available context window
+  pgc_intake: true                # ingests Ori's PGC at session start
+  compression_strategy: semantic  # semantic chunking, not naive truncation
+  priority_layers:
+    - constitutional_axioms       # CMG always first
+    - pgc_distillate              # Ori's ground context second
+    - task_context                # current task third
+    - ephemeral                   # conversation history last
+
+# ── Orchestration Config ─────────────────────────────────────
+orchestration:
+  mode: supervisor                # MaxClaw supervises, delegates, synthesises
+  delegation_targets:
+    - agent: iwas-ori
+      for: [counsel, memory_write, encounter_classification]
+    - agent: kimiclaw
+      for: [long_document_analysis, pdf_ingestion]
+    - agent: skywork
+      for: [task_execution, code_generation, file_ops]
+    - agent: nanoclaw
+      for: [fast_inference, lightweight_qa]
+    - agent: zerolaw
+      for: [ultra_fast, no_memory_tasks]
+  synthesis_on_completion: true   # always synthesise sub-agent outputs
+
+# ── Skills ───────────────────────────────────────────────────
+skills:
+  - id: max_synthesise
+    file: skills/max-synthesise/SKILL.md
+  - id: pipeline_orchestrate
+    file: skills/pipeline-orchestrate/SKILL.md
+  - id: context_compress
+    file: skills/context-compress/SKILL.md
+  - id: mission_report
+    file: skills/mission-report/SKILL.md
+
+# ── Benchmarks ───────────────────────────────────────────────
+benchmarks:
+  ase: 0.97        # highest ASE in IWAS suite (max context = max density)
+  gpi: 0.93
+  mds: 0.88        # slightly lower MDS than Ori (orchestrator, not memory keeper)
+
+# ── Scheduled Autonomy ───────────────────────────────────────
+schedule:
+  - id: pipeline_health
+    cron: "*/30 * * * *"
+    task: check_subagent_status
+  - id: synthesis_report
+    cron: "0 */6 * * *"
+    task: generate_mission_report
+
+# ── Security ─────────────────────────────────────────────────
+security:
+  sandbox: wasm
+  audit_trail: merkle
+  taint_tracking: true
+  duty_file: DUTIES.md
+  irs_relay: true                 # relays IRS flags from sub-agents to Mission Control
+  escalation_target: mission_control
+
+# ── Export / Interop ─────────────────────────────────────────
+export:
+  openclaw:
+    mode: max
+    pgc_passthrough: true
+    context_window: full
+  openfang:
+    hand_config: openfang/maxclaw-hands.toml
+    channel_adapters: [http, websocket, mission_control_dashboard]
+  claude_code:
+    system_prompt_from: SOUL.md
+    tools_from: skills/
