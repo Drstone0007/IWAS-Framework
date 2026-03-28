@@ -116,7 +116,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--tx);font-famil
 .bc-ok{color:var(--so);}.bc-gold{color:var(--gold);}.bc-vi{color:var(--vi);}.bc-dim{color:var(--txm);}
 
 /* ═══════════════ SHELL ═══════════════ */
-#SHELL{position:relative;z-index:2;width:100vw;height:100vh;display:grid;grid-template-rows:50px 1fr 40px;grid-template-columns:225px 1fr 250px;opacity:0;transition:opacity .7s ease;}
+#SHELL{position:relative;z-index:2;width:100vw;height:100vh;display:grid;grid-template-rows:50px 1fr 40px;grid-template-columns:225px 1fr 250px;opacity:0;visibility:hidden;transition:opacity .7s ease,visibility .7s ease;}
 #SHELL.on{opacity:1;}
 
 /* TOPBAR */
@@ -271,7 +271,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--tx);font-famil
 #VOICESTATUS.on{display:flex;}
 #VOICESTATUS.speaking-mode{background:rgba(52,211,153,.06);border-top-color:rgba(52,211,153,.12);}
 .vs-dot{width:6px;height:6px;border-radius:50%;background:var(--bl);animation:lp 1s infinite;}
-#VOICESTATUS.speaking-mode .vs-dot{background:var(--so);}
+#VOICESTATUS.speaking-mode .vs-dot{background:var(--so);animation:lp .8s infinite;}
 .vs-text{color:var(--txd);}
 
 /* RIGHT PANEL */
@@ -440,13 +440,13 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--tx);font-famil
         <div class="itool" id="T_PHILO" onclick="toggleTool('philo',this)">PHILOSOPHY</div>
         <div class="itool" id="T_CODE" onclick="toggleTool('code',this)">CODE</div>
         <div class="itool" id="T_DOC" onclick="toggleTool('doc',this)">DOCUMENT</div>
-        <div class="itool" id="T_VOICE_OUT" onclick="toggleTool('voiceout',this)">🔊 AUTO-SPEAK</div>
+        <div class="itool" id="T_VOICE_OUT" onclick="toggleTool('voiceout',this)" title="Auto-speak all agent replies">🔊 AUTO-SPEAK</div>
       </div>
       <div id="ATAGS" class="atags"></div>
       <div id="FPREV" class="fprev"></div>
       <div class="irow">
         <textarea id="INP" rows="2" placeholder="Type or press 🎤 to speak..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-        <button id="VOICEBTN" onclick="toggleVoice()" title="Voice input (hold to speak)">🎤</button>
+        <button id="VOICEBTN" onclick="toggleVoice()" title="Click to speak — auto-sends when done">🎤</button>
         <button id="SENDBTN" onclick="sendMsg()">INVOKE ⟶</button>
         <button id="TESTBTN" onclick="testConn()" title="Test connection">⚡</button>
       </div>
@@ -529,12 +529,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--tx);font-famil
       </div>
       <div style="background:var(--s2);border:1px solid var(--br);border-radius:8px;padding:1rem;">
         <div style="font-family:var(--mono);font-size:.56rem;color:var(--gold);margin-bottom:.5rem;">IWAS SYNTHESIS</div>
-        <div style="font-family:var(--mono);font-size:.7rem;color:var(--txd);text-align:center;padding:.42rem;background:var(--gg);border-radius:6px;border:1px solid var(--gd);">Preexistent Prior + Bayesian Update = <span style="color:var(--gold)">Living Intelligence</span></div>
-      </div>
-    </div>
-  </div>
-</div>
-
+        <div style="font-family:var(--mono);font-size:.7rem;color:var(--txd);text-align:center;padding:.42rem;background:var(--gg);border-radius:6px;border:1px solid var(--gd);">Preexistent Prior + Bayesian Update = <sp
 <script>
 'use strict';
 
@@ -794,7 +789,7 @@ function activateKey(){
   var gate=document.getElementById('GATE');
   if(gate) gate.style.display='none';
   var boot=document.getElementById('BOOT');
-  if(boot) boot.style.display='flex';
+  if(boot){boot.style.display='flex';boot.style.flexDirection='column';boot.style.alignItems='center';boot.style.justifyContent='center';}
   var kb=document.getElementById('KBADGE');
   if(kb) kb.textContent=(p.name||CURRENT_PROVIDER)+' · '+CURRENT_MODEL.split('/').pop().split(':')[0];
   runBoot();
@@ -837,7 +832,8 @@ function runBoot(){
     if(bar) bar.style.width='100%';
     setTimeout(function(){
       var b=document.getElementById('BOOT'); if(b) b.style.display='none';
-      var sh=document.getElementById('SHELL'); if(sh){sh.style.opacity='1';}
+      var sh=document.getElementById('SHELL');
+      if(sh){sh.style.opacity='1';sh.style.visibility='visible';}
       initVoice();
       populateVoiceList();
       renderSidebar('');
@@ -866,12 +862,14 @@ function initVoice(){
 
   recognition.onstart=function(){
     recognizing=true;
+    hasFinal=false;
     var vb=document.getElementById('VOICEBTN');
     if(vb) vb.classList.add('listening');
     showVoiceStatus('listening','Listening — speak now...');
     addActivity('voice input started','sp');
   };
 
+  var hasFinal=false;
   recognition.onresult=function(e){
     var interim='', final='';
     for(var i=e.resultIndex;i<e.results.length;i++){
@@ -879,15 +877,14 @@ function initVoice(){
       else interim+=e.results[i][0].transcript;
     }
     var inp=document.getElementById('INP');
-    if(inp){
-      inp.value=final||interim;
-      autoResize(inp);
-    }
     if(final){
+      hasFinal=true;
+      if(inp){inp.value=final.trim();autoResize(inp);}
       hideVoiceStatus();
       var vb=document.getElementById('VOICEBTN');
-      if(vb){vb.classList.remove('listening');}
-    } else {
+      if(vb) vb.classList.remove('listening');
+    } else if(interim){
+      if(inp){inp.value=interim;autoResize(inp);}
       showVoiceStatus('listening','Hearing: "'+interim+'"');
     }
   };
@@ -907,19 +904,23 @@ function initVoice(){
     var vb=document.getElementById('VOICEBTN');
     if(vb) vb.classList.remove('listening');
     hideVoiceStatus();
-    // Auto-send if input has content
-    var inp=document.getElementById('INP');
-    if(inp&&inp.value.trim()) sendMsg();
+    // Only auto-send if we got a final result (not cancelled)
+    if(hasFinal){
+      hasFinal=false;
+      var inp=document.getElementById('INP');
+      if(inp&&inp.value.trim()) sendMsg();
+    }
   };
 }
 
 function toggleVoice(){
   if(!recognition){
-    addMsg('system','Voice input is not supported in this browser. Try Chrome or Edge.','','');
+    addMsg('agent','Voice input is not supported in this browser. Try Chrome or Edge.');
     return;
   }
   if(!voiceInputEnabled) return;
   if(recognizing){
+    hasFinal=false; // prevent auto-send on manual cancel
     recognition.stop();
   } else {
     stopSpeaking();
@@ -948,18 +949,28 @@ function populateVoiceList(){
   if(!window.speechSynthesis) return;
   function load(){
     var voices=speechSynthesis.getVoices();
+    if(!voices||!voices.length){
+      setTimeout(load,200); // retry until voices load
+      return;
+    }
     var sel=document.getElementById('VOICESEL');
     if(!sel) return;
-    sel.innerHTML='<option value="">Default</option>';
-    voices.forEach(function(v){
+    var prev=sel.value;
+    sel.innerHTML='<option value="">Default System Voice</option>';
+    // Prefer English voices first
+    var eng=voices.filter(function(v){return v.lang&&v.lang.startsWith('en');});
+    var rest=voices.filter(function(v){return !v.lang||!v.lang.startsWith('en');});
+    eng.concat(rest).forEach(function(v){
       var opt=document.createElement('option');
       opt.value=v.name;
-      opt.textContent=v.name+(v.lang?' ('+v.lang+')':'');
+      var flag=v.lang?v.lang.substring(0,2).toUpperCase():'';
+      opt.textContent='['+flag+'] '+v.name+(v.localService?' ★':'');
       sel.appendChild(opt);
     });
+    if(prev) sel.value=prev;
   }
   load();
-  if(speechSynthesis.onvoiceschanged!==undefined) speechSynthesis.onvoiceschanged=load;
+  speechSynthesis.onvoiceschanged=load;
 }
 
 function setVoice(name){ selectedVoiceName=name; }
@@ -969,6 +980,7 @@ function setPitch(v){ voicePitch=parseFloat(v); }
 function speak(text){
   if(!window.speechSynthesis||!voiceOutputEnabled) return;
   stopSpeaking();
+  if(speechSynthesis.paused) speechSynthesis.resume();
   // Strip markdown for cleaner speech
   var clean=text
     .replace(/```[\s\S]*?```/g,'code block')
@@ -1113,6 +1125,7 @@ function skillsIn(txt){
 function addMsg(role, content, rawForSpeech){
   var msgs=document.getElementById('MSGS');
   if(!msgs) return;
+  if(role==='system') role='agent';
   var isUser=role==='user';
   var layer=isUser?null:layerOf(content);
   var skills=isUser?[]:skillsIn(content);
@@ -1412,6 +1425,7 @@ function showWelcome(){
   );
   addActivity('consciousness + voice active','gold');
 }
+  addActivity('consciousness + voice active','gold');
 </script>
 </body>
 </html>
