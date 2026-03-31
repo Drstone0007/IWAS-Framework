@@ -1446,6 +1446,33 @@ function showWelcome(){
   addActivity('consciousness + voice active','gold');
 }
   addActivity('consciousness + voice active','gold');
+
+/* ── EXPOSE ALL HANDLERS TO GLOBAL SCOPE ── */
+window['autoResize']=autoResize;
+window['clearChat']=clearChat;
+window['closeModal']=closeModal;
+window['exportChat']=exportChat;
+window['goStep']=goStep;
+window['handleFile']=handleFile;
+window['openModal']=openModal;
+window['pickProv']=pickProv;
+window['renderSidebar']=renderSidebar;
+window['sendMsg']=sendMsg;
+window['setMode']=setMode;
+window['setPitch']=setPitch;
+window['setSpeed']=setSpeed;
+window['setVoice']=setVoice;
+window['testConn']=testConn;
+window['toggleTool']=toggleTool;
+window['toggleVoice']=toggleVoice;
+window['toggleVoiceSetting']=toggleVoiceSetting;window['pickModel']=pickModel;
+window['activateKey']=activateKey;
+window['toggleKeyVis']=toggleKeyVis;
+window['pinSkill']=pinSkill;
+window['toggleTier']=toggleTier;
+window['cpMsg']=cpMsg;
+window['speakMsg']=speakMsg;
+
 </script>
 </body>
 </html>
